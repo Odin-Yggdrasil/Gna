@@ -1,3 +1,5 @@
+<p align="center"><img src="../deploy/logo/gna-180.png" alt="Gná" width="96"></p>
+
 # Application Gná (Windows, Linux, Android)
 
 L'application affiche l'interface de ton serveur Gná dans sa propre fenêtre, avec le **certificat du serveur épinglé**.

@@ -450,10 +450,10 @@ button.warn, .term-actions button.warn { border-color: var(--warn); color: var(-
 .workspaces { margin-bottom: 24px; }
 .ws-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .ws {
-  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 14px;
   background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius);
 }
-.ws-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ws-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 180px; }
 .ws-meta { font-size: 12px; color: var(--muted); }
 .ws-targets { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-actions { display: flex; gap: 6px; flex: none; }

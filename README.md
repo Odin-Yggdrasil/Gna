@@ -1,8 +1,46 @@
-# Gná
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-sombre.png">
+    <img src="docs/images/logo-clair.png" alt="Gná — Bastion d'accès" width="360">
+  </picture>
+</p>
 
-Bastion d'accès multi-protocole (SSH, RDP, VNC), accessible depuis le navigateur puis via une application Windows, Linux et Android.
+<p align="center">
+  <b>Bastion d'accès SSH, VNC et RDP</b>, depuis le navigateur ou l'application Windows, Linux et Android.<br>
+  Installation native (paquet .deb + systemd), sans Docker.
+</p>
+
+<p align="center">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-5FB3A1">
+  <img alt="Go" src="https://img.shields.io/badge/Go-serveur-00ADD8?logo=go&logoColor=white">
+  <img alt="Rust" src="https://img.shields.io/badge/Rust-passerelle%20RDP%20%2B%20app-000000?logo=rust">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
+  <img alt="Licence" src="https://img.shields.io/badge/licence-propri%C3%A9taire-lightgrey">
+</p>
 
 > Dans la mythologie nordique, Gná est la messagère de Frigg : elle voyage d'un monde à l'autre sur Hófvarpnir.
+
+![Écran d'accueil : espaces de travail et machines groupées par dossier](docs/images/accueil.png)
+
+## Fonctionnalités
+
+| | |
+|---|---|
+| **Accès** | Terminal SSH, bureaux VNC et RDP (Windows, xrdp) dans le navigateur ; fichiers SSH (SFTP) et transferts vers les bureaux RDP |
+| **Sécurité** | Mot de passe + MFA (TOTP), droits par utilisateur et par groupe, empreintes des machines vérifiées, secrets chiffrés, journal d'audit |
+| **Sessions** | Plusieurs sessions en onglets ou en **mosaïque**, saisie synchronisée sur plusieurs terminaux, enregistrement et relecture |
+| **Confort** | Copier-coller direct, redimensionnement automatique, touches spéciales, bibliothèque de commandes, espaces de travail, favoris, dossiers, 7 thèmes |
+| **Application** | Windows, Linux et Android (Tauri), certificat du serveur épinglé |
+| **Installation** | Paquet .deb (PostgreSQL, service systemd, configuration créés automatiquement) |
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/mosaique.png" alt="Mosaïque de 4 terminaux avec saisie synchronisée"><p align="center"><sub>Mosaïque et saisie synchronisée</sub></p></td>
+    <td width="50%"><img src="docs/images/rdp.jpg" alt="Bureau à distance RDP dans le navigateur"><p align="center"><sub>Bureau RDP dans le navigateur</sub></p></td>
+  </tr>
+</table>
+
+![Les thèmes : Sombre, Clair, Nord, Dracula, Gruvbox, Solarized](docs/images/themes.png)
 
 ## État : étape 13 — thèmes et application Linux à jour
 
