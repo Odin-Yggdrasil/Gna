@@ -1,0 +1,12 @@
+.env
+/gna
+/bin/
+app/node_modules/
+app/src-tauri/target/
+app/src-tauri/gen/
+app/relay/target/
+rdpbridge/target/
+/dist/
+/go.dev.mod
+/go.dev.sum
+*.deb

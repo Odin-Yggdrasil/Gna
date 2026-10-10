@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "gna-app",
+  "bundle": {
+    "linux": {
+      "deb": {
+        "desktopTemplate": "gna.desktop"
+      },
+      "appimage": {}
+    }
+  }
+}

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload >/dev/null 2>&1 || true
+fi
+if [ "$1" = "purge" ]; then
+  # Par prudence, rien n'est effacé automatiquement : la clé maître et la base
+  # sont indispensables pour relire les données chiffrées.
+  systemctl disable gna >/dev/null 2>&1 || true
+  echo "gna : désinstallé. Données conservées : /etc/gna (clé maître), /var/lib/gna, base PostgreSQL « gna »."
+  echo "      Pour tout effacer : sudo rm -rf /etc/gna /var/lib/gna && sudo -u postgres dropdb gna"
+fi
+exit 0

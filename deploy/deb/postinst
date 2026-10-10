@@ -1,0 +1,82 @@
+#!/bin/sh
+# Installation ou mise à jour du paquet gna.
+set -e
+
+[ "$1" = "configure" ] || exit 0
+
+say() { echo "gna : $*"; }
+
+# 1. Utilisateur système dédié
+if ! getent passwd gna >/dev/null; then
+  useradd --system --user-group --home-dir /nonexistent --no-create-home --shell /usr/sbin/nologin gna
+fi
+
+# 2. Reprise d'une installation faite avec deploy/install.sh (fichiers dans /usr/local)
+if [ -f /etc/systemd/system/gna.service ] && grep -q '^ExecStart=/usr/local/bin/gna serve' /etc/systemd/system/gna.service; then
+  say "reprise de l'installation manuelle (le service et la base sont conservés)"
+  rm -f /etc/systemd/system/gna.service
+  rm -f /usr/local/bin/gna /usr/local/bin/gna-rdp
+  rm -rf /usr/local/share/doc/gna
+fi
+
+# 3. Configuration : créée une seule fois, avec une clé maître neuve
+install -d -m 0750 -o root -g gna /etc/gna
+NEW_KEY=0
+if [ ! -f /etc/gna/gna.env ]; then
+  key="$(/usr/bin/gna keygen)"
+  sed "s|^GNA_MASTER_KEY=.*|GNA_MASTER_KEY=$key|" /usr/share/gna/gna.env.example > /etc/gna/gna.env
+  chown root:gna /etc/gna/gna.env
+  chmod 0640 /etc/gna/gna.env
+  NEW_KEY=1
+fi
+
+# 4. Rôle et base PostgreSQL locaux (authentification « peer », sans mot de passe)
+if [ -d /run/systemd/system ]; then
+  systemctl start postgresql >/dev/null 2>&1 || true
+fi
+if command -v psql >/dev/null 2>&1 && runuser -u postgres -- psql -tAc 'SELECT 1' >/dev/null 2>&1; then
+  if ! runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='gna'" | grep -q 1; then
+    runuser -u postgres -- createuser gna
+  fi
+  if ! runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_database WHERE datname='gna'" | grep -q 1; then
+    runuser -u postgres -- createdb -O gna gna
+  fi
+else
+  say "PostgreSQL ne répond pas : base non vérifiée (relancer « sudo dpkg-reconfigure gna » ensuite)"
+fi
+
+# 5. Service (les migrations de la base sont appliquées au démarrage)
+STARTED=0
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload
+  systemctl enable gna >/dev/null 2>&1
+  if systemctl restart gna; then
+    sleep 1
+    if systemctl is-active --quiet gna; then
+      STARTED=1
+    else
+      say "le service ne tourne pas : voir « journalctl -u gna -n 30 »"
+    fi
+  else
+    say "démarrage impossible : voir « journalctl -u gna -n 30 »"
+  fi
+fi
+
+if [ -z "$2" ]; then
+  # Première installation
+  IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  PORT="$(sed -n 's/^GNA_LISTEN=.*:\([0-9]*\)$/\1/p' /etc/gna/gna.env | tail -1)"
+  echo
+  if [ "$STARTED" = 1 ]; then say "installé et démarré."; else say "installé (service non démarré)."; fi
+  echo "  Créer le premier administrateur :  sudo -u gna gna user add admin --admin"
+  echo "  Ouvrir :                           https://${IP:-<ip-du-serveur>}:${PORT:-8443}"
+  echo "  Empreinte du certificat :          sudo -u gna gna tls info"
+else
+  say "mis à jour de la version $2 vers $(/usr/bin/gna version | awk '{print $2}')."
+  [ "$STARTED" = 1 ] || say "service non redémarré : sudo systemctl restart gna"
+fi
+if [ "$NEW_KEY" = 1 ]; then
+  echo
+  echo "  IMPORTANT : sauvegardez la clé maître (GNA_MASTER_KEY dans /etc/gna/gna.env) hors de ce serveur."
+fi
+exit 0

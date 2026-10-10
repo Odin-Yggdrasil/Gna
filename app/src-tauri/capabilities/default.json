@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Écran de réglages local uniquement. Les pages servies par le relais (interface de Gná) n'ont aucun accès aux commandes de l'application.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

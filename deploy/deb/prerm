@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+# Arrêt du service à la désinstallation (pas lors d'une mise à jour : postinst le relance).
+if [ "$1" = "remove" ] && [ -d /run/systemd/system ]; then
+  systemctl stop gna >/dev/null 2>&1 || true
+fi
+exit 0

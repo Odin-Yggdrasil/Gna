@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gná</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="apple-touch-icon" href="/icons/gna-180.png">
+  <link rel="stylesheet" href="/vendor/xterm.css">
+  <link rel="stylesheet" href="/vendor/asciinema/asciinema-player.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/theme.js"></script>
+  <script src="/vendor/xterm.js" defer></script>
+  <script src="/vendor/addon-fit.js" defer></script>
+  <script src="/vendor/asciinema/asciinema-player.min.js" defer></script>
+  <script src="/app.js" defer></script>
+  <script type="module" src="/sessions.js"></script>
+  <script type="module" src="/desktop.js"></script>
+</head>
+<body>
+  <!-- ===== Authentification ===== -->
+  <main id="auth" class="auth" hidden>
+    <div class="card">
+      <header class="brand">
+        <span class="mark" title="Gná"><svg class="mark-svg" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"><path d="M32 11V53"/><path d="M21 23L32 13L43 23"/><path d="M22 30L42 50M42 30L22 50"/></g></svg></span>
+        <div>
+          <h1>Gná</h1>
+          <p class="tagline">Bastion d'accès</p>
+        </div>
+      </header>
+
+      <p class="error" data-error role="alert" hidden></p>
+
+      <form id="view-login" class="view" hidden>
+        <label>Identifiant
+          <input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </label>
+        <label>Mot de passe
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit">Se connecter</button>
+      </form>
+
+      <form id="view-mfa" class="view" hidden>
+        <p>Saisissez le code à 6 chiffres de votre application d'authentification.</p>
+        <label>Code
+          <input name="code" class="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        </label>
+        <button type="submit">Valider</button>
+        <button type="button" class="link" data-action="logout">Annuler</button>
+      </form>
+
+      <form id="view-enroll" class="view" hidden>
+        <p>La double authentification est obligatoire. Scannez ce QR code avec Aegis, 2FAS, Bitwarden ou Google Authenticator.</p>
+        <img id="qr" class="qr" alt="QR code de configuration TOTP">
+        <details>
+          <summary>Saisie manuelle</summary>
+          <code id="secret" class="secret"></code>
+        </details>
+        <label>Code affiché par l'application
+          <input name="code" class="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        </label>
+        <button type="submit">Activer et continuer</button>
+        <button type="button" class="link" data-action="logout">Annuler</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- ===== Application ===== -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <div class="brand small">
+        <span class="mark" title="Gná"><svg class="mark-svg" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"><path d="M32 11V53"/><path d="M21 23L32 13L43 23"/><path d="M22 30L42 50M42 30L22 50"/></g></svg></span>
+        <strong>Gná</strong>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="targets" aria-selected="true">Cibles</button>
+        <button type="button" role="tab" data-tab="users" data-admin hidden>Utilisateurs</button>
+        <button type="button" role="tab" data-tab="groups" data-admin hidden>Groupes</button>
+        <button type="button" role="tab" data-tab="sessions" data-admin hidden>Sessions</button>
+        <button type="button" role="tab" data-tab="audit" data-admin hidden>Journal</button>
+      </nav>
+      <div class="who">
+        <button type="button" class="ghost sessions-btn" data-action="ses-show" id="sessions-btn" hidden>Sessions ouvertes <span id="sessions-count" class="count">0</span></button>
+        <span id="me-name"></span>
+        <span id="me-admin" class="badge" hidden>admin</span>
+        <button type="button" class="ghost" data-action="account">Mon compte</button>
+        <button type="button" class="ghost" data-action="logout">Déconnexion</button>
+      </div>
+    </header>
+
+    <p class="error page-error" data-error role="alert" hidden></p>
+
+    <section class="panel" data-panel="targets">
+      <div id="workspaces-box" class="workspaces" hidden>
+        <div class="panel-head">
+          <h2>Espaces de travail</h2>
+          <button type="button" class="ghost" data-action="ws-new">Nouvel espace de travail</button>
+        </div>
+        <p id="workspaces-empty" class="hint" hidden>Un espace de travail rouvre d'un clic un ensemble de machines, en onglets ou en mosaïque. Créez-en un ici, ou enregistrez les sessions ouvertes depuis l'écran des sessions.</p>
+        <ul id="workspaces" class="ws-list"></ul>
+      </div>
+      <div class="panel-head">
+        <h2>Machines</h2>
+        <button type="button" data-action="new-target" data-admin hidden>Ajouter une cible</button>
+      </div>
+      <div class="targets-tools" id="targets-tools" hidden>
+        <input id="target-search" type="search" placeholder="Rechercher : nom, adresse, dossier…" aria-label="Rechercher une machine" autocomplete="off">
+      </div>
+      <p id="targets-empty" class="empty" hidden>Aucune cible pour l'instant.</p>
+      <p id="targets-nomatch" class="empty" hidden>Aucune machine ne correspond à la recherche.</p>
+      <div id="targets"></div>
+    </section>
+
+    <section class="panel" data-panel="users" hidden>
+      <div class="panel-head">
+        <h2>Utilisateurs</h2>
+        <button type="button" data-action="new-user">Nouvel utilisateur</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Utilisateur</th><th>Rôle</th><th>MFA</th><th>État</th><th>Groupes</th><th></th></tr></thead>
+          <tbody id="users"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="groups" hidden>
+      <div class="panel-head">
+        <h2>Groupes</h2>
+        <button type="button" data-action="new-group">Nouveau groupe</button>
+      </div>
+      <p id="groups-empty" class="empty" hidden>Aucun groupe. Un groupe permet d'attribuer des cibles à plusieurs utilisateurs d'un coup.</p>
+      <ul id="groups" class="targets"></ul>
+    </section>
+
+    <section class="panel" data-panel="sessions" hidden>
+      <div class="panel-head"><h2>Sessions d'accès</h2></div>
+      <form id="rec-search" class="searchbar" role="search">
+        <input name="q" type="search" placeholder="Rechercher un texte affiché dans les sessions SSH (ex. rm -rf, /etc/shadow)" minlength="2" required>
+        <select name="days" aria-label="Période">
+          <option value="1">24 h</option>
+          <option value="7">7 jours</option>
+          <option value="30" selected>30 jours</option>
+          <option value="365">1 an</option>
+        </select>
+        <button type="submit">Rechercher</button>
+      </form>
+      <div id="rec-results" class="rec-results" hidden></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Début</th><th>Utilisateur</th><th>Cible</th><th>Durée</th><th>Fin</th><th>IP</th><th>Enregistrement</th></tr></thead>
+          <tbody id="sessions"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="audit" hidden>
+      <div class="panel-head"><h2>Journal d'audit</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Utilisateur</th><th>Événement</th><th>Détail</th><th>IP</th></tr></thead>
+          <tbody id="audit"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== Sessions ouvertes (SSH, VNC, RDP) en onglets ===== -->
+  <div id="session-view" class="terminal-view" hidden>
+    <header class="termbar session-bar">
+      <div class="stabs-wrap">
+        <button type="button" class="ghost small home-btn" data-action="ses-home" title="Retour à la liste des machines (les sessions restent ouvertes)" aria-label="Machines">
+          <span class="mark mini" aria-hidden="true"><svg class="mark-svg" viewBox="0 0 64 64"><g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter"><path d="M32 11V53"/><path d="M21 23L32 13L43 23"/><path d="M22 30L42 50M42 30L22 50"/></g></svg></span>
+          <span>Machines</span>
+        </button>
+        <nav id="stabs" class="stabs" role="tablist" aria-label="Sessions ouvertes"></nav>
+      </div>
+      <div class="term-actions">
+        <span id="ses-status" class="muted ses-status"></span>
+        <div class="menu" id="ses-cmds" hidden>
+          <button type="button" class="ghost" data-action="cmds-menu" aria-haspopup="true" aria-expanded="false" title="Bibliothèque de commandes">Commandes ▾</button>
+          <div id="cmds-menu" class="menu-list cmds-list" role="menu" hidden>
+            <p id="cmds-target" class="menu-hint"></p>
+            <div id="cmds-items"></div>
+            <button type="button" role="menuitem" data-action="cmds-manage" class="menu-manage">Gérer les commandes…</button>
+          </div>
+        </div>
+        <button type="button" class="ghost" data-action="ws-save" id="ws-save-btn" title="Enregistrer les sessions ouvertes et leur disposition">Enregistrer l'espace</button>
+        <button type="button" class="ghost" data-action="ses-grid" id="ses-grid-btn" aria-pressed="false" title="Afficher toutes les sessions en même temps" hidden>Mosaïque</button>
+        <button type="button" class="ghost" data-action="ses-sync" id="ses-sync-btn" aria-pressed="false" title="Envoyer la frappe à tous les terminaux SSH cochés « synchro »" hidden>Saisie synchronisée</button>
+        <div class="menu" id="ses-keys" hidden>
+          <button type="button" class="ghost" data-action="desk-keys" aria-haspopup="true" aria-expanded="false" title="Envoyer une combinaison de touches">Touches ▾</button>
+          <div id="desk-keys-menu" class="menu-list" role="menu" hidden>
+            <button type="button" role="menuitem" data-action="desk-key" data-combo="cad">Ctrl+Alt+Suppr</button>
+            <button type="button" role="menuitem" data-action="desk-key" data-combo="win">Touche Windows</button>
+            <button type="button" role="menuitem" data-action="desk-key" data-combo="alttab">Alt+Tab</button>
+            <button type="button" role="menuitem" data-action="desk-key" data-combo="ctrlesc">Ctrl+Échap</button>
+            <button type="button" role="menuitem" data-action="desk-key" data-combo="winl">Verrouiller (Windows+L)</button>
+            <button type="button" role="menuitem" data-action="desk-key" data-combo="print">Impr. écran</button>
+          </div>
+        </div>
+        <button type="button" class="ghost" data-action="ses-panel" data-panel="sftp" id="ses-sftp-btn" aria-pressed="false" hidden>Fichiers</button>
+        <button type="button" class="ghost" data-action="ses-panel" data-panel="files" id="ses-files-btn" aria-pressed="false" hidden>Fichiers</button>
+        <button type="button" class="ghost" data-action="ses-fullscreen">Plein écran</button>
+        <button type="button" class="ghost" data-action="ses-reconnect" id="ses-reconnect" hidden>Reconnecter</button>
+        <button type="button" class="ghost" data-action="ses-close" title="Fermer cette session">Fermer</button>
+      </div>
+    </header>
+    <div class="desk-body">
+      <div id="panes" class="panes"></div>
+      <div id="drop-hint" class="drop-hint" hidden><span id="drop-hint-text"></span></div>
+      <div id="desk-toast" class="desk-toast" role="status" hidden></div>
+
+      <aside id="sftp-panel" class="desk-panel" aria-label="Fichiers de la machine distante" hidden>
+        <div class="panel-head"><strong>Fichiers (SFTP)</strong><button type="button" class="ghost small" data-action="ses-panel" data-panel="sftp" aria-label="Fermer le panneau">✕</button></div>
+        <form id="sftp-path-form" class="sftp-path">
+          <button type="button" class="ghost small" data-action="sftp-up" title="Dossier parent" aria-label="Dossier parent">↑</button>
+          <input id="sftp-path" type="text" spellcheck="false" autocomplete="off" aria-label="Dossier">
+          <button type="submit" class="ghost small">Aller</button>
+        </form>
+        <div class="panel-actions">
+          <label class="button-like">Envoyer des fichiers<input id="sftp-input" type="file" multiple hidden></label>
+          <button type="button" class="ghost" data-action="sftp-mkdir">Nouveau dossier</button>
+          <button type="button" class="ghost" data-action="sftp-refresh">Actualiser</button>
+        </div>
+        <div id="sftp-progress" class="files-progress" hidden><div></div><span></span></div>
+        <ul id="sftp-list" class="files-list"></ul>
+        <p id="sftp-msg" class="hint" role="status"></p>
+      </aside>
+
+      <aside id="desk-files" class="desk-panel" aria-label="Fichiers" hidden>
+        <div class="panel-head"><strong>Fichiers</strong><button type="button" class="ghost small" data-action="ses-panel" data-panel="files" aria-label="Fermer le panneau">✕</button></div>
+        <p class="hint">Ces fichiers sont dans le lecteur <strong>« Gna »</strong> de la machine
+          distante : sous Windows, <em>Ce PC → Gna sur GNA</em> ; sous Linux (xrdp), <em>~/thinclient_drives/Gna</em>.
+          Ils sont supprimés à la fin de la session.</p>
+        <div class="panel-actions">
+          <label class="button-like">Envoyer des fichiers<input id="files-input" type="file" multiple hidden></label>
+          <button type="button" class="ghost" data-action="files-refresh">Actualiser</button>
+        </div>
+        <div id="files-progress" class="files-progress" hidden><div></div><span></span></div>
+        <div id="files-usage" class="hint"></div>
+        <ul id="files-list" class="files-list"></ul>
+        <p id="files-msg" class="hint" role="status"></p>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ===== Relecture d'une session ===== -->
+  <div id="replay-view" class="terminal-view" hidden>
+    <header class="termbar">
+      <div class="term-title">
+        <strong id="replay-name"></strong>
+        <span id="replay-info" class="muted"></span>
+      </div>
+      <div class="term-actions">
+        <button type="button" class="ghost" data-action="replay-download">Télécharger (.cast)</button>
+        <button type="button" class="ghost" data-action="replay-close">Fermer</button>
+      </div>
+    </header>
+    <div class="replay-body">
+      <div id="player" class="player"></div>
+      <div id="vnc-player" class="vnc-player" hidden>
+        <div id="vnc-screen" class="vnc-screen"></div>
+        <p id="vnc-loading" class="vnc-loading">Chargement de l'enregistrement…</p>
+        <div class="vnc-controls">
+          <button type="button" class="ghost small" data-action="vnc-play" aria-label="Lecture / pause">⏸</button>
+          <span id="vnc-time" class="vnc-time">0:00 / 0:00</span>
+          <input id="vnc-seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Position dans l'enregistrement">
+          <select id="vnc-speed" aria-label="Vitesse">
+            <option value="1" selected>×1</option>
+            <option value="2">×2</option>
+            <option value="4">×4</option>
+            <option value="8">×8</option>
+            <option value="16">×16</option>
+          </select>
+          <label class="check small"><input type="checkbox" id="vnc-skip" checked> Sauter les inactivités</label>
+        </div>
+      </div>
+      <aside class="replay-side" id="replay-side">
+        <form id="replay-search" class="searchbar compact" role="search">
+          <input name="q" type="search" placeholder="Rechercher dans cette session" minlength="2" required>
+          <button type="submit">OK</button>
+        </form>
+        <p class="hint" id="replay-hint">Cliquez sur un résultat pour aller au moment correspondant.</p>
+        <ol id="replay-hits" class="hits"></ol>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ===== Formulaire de cible (admin) ===== -->
+  <dialog id="target-dialog">
+    <form id="target-form" class="view" novalidate>
+      <h2 id="target-form-title">Nouvelle cible</h2>
+      <p class="error" id="target-error" role="alert" hidden></p>
+      <fieldset class="seg">
+        <legend>Protocole</legend>
+        <label><input type="radio" name="protocol" value="ssh" checked> SSH (terminal)</label>
+        <label><input type="radio" name="protocol" value="rdp"> RDP (Windows)</label>
+        <label><input type="radio" name="protocol" value="vnc"> VNC (bureau)</label>
+      </fieldset>
+      <label>Nom
+        <input name="name" maxlength="64" required placeholder="srv-web-01">
+      </label>
+      <div class="row">
+        <label class="grow">Adresse
+          <input name="host" required placeholder="192.168.1.20 ou srv.lan" autocapitalize="none" spellcheck="false">
+        </label>
+        <label class="port">Port
+          <input name="port" type="number" min="1" max="65535" value="22" required>
+        </label>
+      </div>
+      <label data-proto="ssh rdp">Identifiant sur la cible
+        <input name="username" required autocapitalize="none" spellcheck="false" placeholder="root">
+      </label>
+      <fieldset class="seg">
+        <legend>Authentification</legend>
+        <label><input type="radio" name="auth_method" value="password" checked> Mot de passe</label>
+        <label data-proto="ssh"><input type="radio" name="auth_method" value="key"> Clé privée</label>
+        <label data-proto="vnc" hidden><input type="radio" name="auth_method" value="none"> Aucune</label>
+      </fieldset>
+      <label data-auth="password"><span id="password-label">Mot de passe</span>
+        <input name="password" type="password" autocomplete="new-password">
+      </label>
+      <label data-auth="key" hidden>Clé privée (OpenSSH, PEM)
+        <textarea name="private_key" rows="5" spellcheck="false" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+      </label>
+      <label data-auth="key" hidden>Phrase de passe (si la clé en a une)
+        <input name="passphrase" type="password" autocomplete="new-password">
+      </label>
+      <p class="hint" id="secret-hint" hidden>Laisser vide pour conserver l'identifiant enregistré.</p>
+
+      <label data-proto="rdp">Clavier de la cible
+        <select name="keyboard_layout">
+          <option value="fr">Français (Windows)</option>
+          <option value="fr-linux">Français (Linux / xrdp)</option>
+          <option value="us">Anglais (États-Unis)</option>
+        </select>
+      </label>
+      <p class="hint" data-proto="rdp">Identifiant au format <code>utilisateur</code> ou <code>DOMAINE\utilisateur</code>. Les comptes Microsoft se saisissent avec leur adresse e-mail.</p>
+      <div class="hostkey" data-proto="ssh rdp">
+        <div class="hostkey-head">
+          <span id="hostkey-title">Clé d'hôte SSH</span>
+          <button type="button" class="ghost small" data-action="scan">Récupérer l'empreinte</button>
+        </div>
+        <p class="hint" data-proto="ssh">Comparez l'empreinte avec celle du serveur : <code>ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</code></p>
+        <p class="hint" data-proto="rdp">Comparez-la avec celle du certificat Bureau à distance de la cible. Windows (PowerShell administrateur) : <code>$c=(Get-ChildItem 'Cert:\LocalMachine\Remote Desktop')[0]; [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($c.RawData)) -replace '-',':'</code> — xrdp : <code>openssl x509 -in /etc/xrdp/cert.pem -noout -fingerprint -sha256</code></p>
+        <code id="hostkey-fp" class="fp">Aucune clé enregistrée</code>
+        <input type="hidden" name="host_key">
+      </div>
+
+      <label>Description (facultatif)
+        <input name="description" maxlength="500">
+      </label>
+      <div class="row">
+        <label class="grow">Dossier (facultatif)
+          <select name="folder_choice" id="folder-choice"></select>
+        </label>
+        <label class="grow" id="folder-new-label" hidden>Nom du nouveau dossier
+          <input name="folder_new" maxlength="64" placeholder="ex. Serveurs web" autocomplete="off">
+        </label>
+      </div>
+      <div class="access-box">
+        <div class="access-head">Accès</div>
+        <p class="hint">Les administrateurs ont accès à toutes les cibles. Cochez qui d'autre peut s'y connecter.</p>
+        <div class="checklists">
+          <fieldset class="checklist"><legend>Groupes</legend><div id="target-groups"></div></fieldset>
+          <fieldset class="checklist"><legend>Utilisateurs</legend><div id="target-users"></div></fieldset>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-action="cancel-target">Annuler</button>
+        <button type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+  <!-- ===== Espace de travail (création / modification) ===== -->
+  <dialog id="ws-dialog">
+    <form id="ws-form" class="view" novalidate>
+      <h2 id="ws-form-title">Nouvel espace de travail</h2>
+      <p class="error" data-form-error role="alert" hidden></p>
+      <label>Nom
+        <input name="name" maxlength="64" required placeholder="ex. Serveurs web" autocomplete="off">
+      </label>
+      <fieldset class="checklist ws-machines"><legend>Machines (16 au plus)</legend><div id="ws-machines"></div></fieldset>
+      <fieldset class="seg">
+        <legend>Disposition</legend>
+        <label><input type="radio" name="layout" value="tabs" checked> Onglets</label>
+        <label><input type="radio" name="layout" value="grid"> Mosaïque</label>
+      </fieldset>
+      <label class="check"><input type="checkbox" name="sync"> Saisie synchronisée des terminaux SSH à l'ouverture</label>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-action="close-dialog">Annuler</button>
+        <button type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== Bibliothèque de commandes ===== -->
+  <dialog id="snippets-dialog">
+    <div class="view">
+      <h2>Bibliothèque de commandes</h2>
+      <p class="hint">Vos commandes enregistrées, envoyées d'un clic dans le terminal actif (ou dans tous les terminaux synchronisés) depuis le menu « Commandes » des sessions.</p>
+      <ul id="snippets-list" class="snippets-list"></ul>
+      <form id="snippet-form" class="snippet-form" novalidate>
+        <h3 id="snippet-form-title">Nouvelle commande</h3>
+        <p class="error" data-form-error role="alert" hidden></p>
+        <label>Nom
+          <input name="name" maxlength="64" required placeholder="ex. Mise à jour Debian">
+        </label>
+        <label>Commande
+          <textarea name="command" rows="4" maxlength="8000" required spellcheck="false" placeholder="sudo apt update &amp;&amp; sudo apt upgrade -y"></textarea>
+        </label>
+        <label class="check"><input type="checkbox" name="run" checked> Exécuter directement (valider avec Entrée)</label>
+        <div class="dialog-actions">
+          <button type="button" class="ghost" data-action="snippet-new" id="snippet-cancel-edit" hidden>Annuler la modification</button>
+          <button type="submit" id="snippet-submit">Ajouter</button>
+        </div>
+      </form>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-action="close-dialog">Fermer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ===== Utilisateur (création) ===== -->
+  <dialog id="user-dialog">
+    <form id="user-form" class="view" novalidate>
+      <h2>Nouvel utilisateur</h2>
+      <p class="error" data-form-error role="alert" hidden></p>
+      <label>Identifiant
+        <input name="username" required maxlength="64" autocapitalize="none" spellcheck="false" placeholder="prenom.nom">
+      </label>
+      <label>Mot de passe initial (12 caractères minimum)
+        <div class="inline">
+          <input name="password" type="text" autocomplete="off" spellcheck="false" required>
+          <button type="button" class="ghost small" data-action="gen-password">Générer</button>
+        </div>
+      </label>
+      <p class="hint">À transmettre à l'utilisateur : il configurera sa double authentification à la première connexion, puis pourra changer son mot de passe dans « Mon compte ».</p>
+      <label class="check"><input type="checkbox" name="is_admin"> Administrateur (accès à toutes les cibles et à l'administration)</label>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-action="close-dialog">Annuler</button>
+        <button type="submit">Créer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== Mot de passe (réinitialisation admin ou Mon compte) ===== -->
+  <dialog id="password-dialog">
+    <form id="password-form" class="view" novalidate>
+      <h2 id="password-title">Mon compte</h2>
+      <div class="account-section" data-self>
+        <label class="theme-pick">Thème de l'interface
+          <select id="theme-select" aria-describedby="theme-hint">
+            <option value="system">Système (clair ou sombre selon l'ordinateur)</option>
+            <option value="dark">Sombre</option>
+            <option value="light">Clair</option>
+            <option value="nord">Nord</option>
+            <option value="dracula">Dracula</option>
+            <option value="gruvbox">Gruvbox</option>
+            <option value="solarized">Solarized clair</option>
+          </select>
+        </label>
+        <p class="hint" id="theme-hint">Appliqué tout de suite, aux terminaux et aux bureaux compris ; enregistré pour votre compte (navigateur et application).</p>
+      </div>
+      <p class="error" data-form-error role="alert" hidden></p>
+      <p class="hint" id="password-intro"></p>
+      <label data-self>Mot de passe actuel
+        <input name="current" type="password" autocomplete="current-password">
+      </label>
+      <label>Nouveau mot de passe (12 caractères minimum)
+        <input name="new" type="password" autocomplete="new-password" required>
+      </label>
+      <label>Confirmation
+        <input name="confirm" type="password" autocomplete="new-password" required>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-action="close-dialog">Annuler</button>
+        <button type="submit">Changer le mot de passe</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== Groupe ===== -->
+  <dialog id="group-dialog">
+    <form id="group-form" class="view" novalidate>
+      <h2 id="group-title">Nouveau groupe</h2>
+      <p class="error" data-form-error role="alert" hidden></p>
+      <label>Nom
+        <input name="name" required maxlength="64" placeholder="admins-linux">
+      </label>
+      <label>Description (facultatif)
+        <input name="description" maxlength="500">
+      </label>
+      <div class="checklists">
+        <fieldset class="checklist"><legend>Membres</legend><div id="group-members"></div></fieldset>
+        <fieldset class="checklist"><legend>Cibles accessibles</legend><div id="group-targets"></div></fieldset>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-action="close-dialog">Annuler</button>
+        <button type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

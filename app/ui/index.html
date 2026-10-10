@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gná</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="card">
+    <header class="brand">
+      <span class="mark" title="Gná"><svg class="mark-svg" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"><path d="M32 11V53"/><path d="M21 23L32 13L43 23"/><path d="M22 30L42 50M42 30L22 50"/></g></svg></span>
+      <div>
+        <h1>Gná</h1>
+        <p class="tagline">Bastion d'accès</p>
+      </div>
+    </header>
+
+    <p id="error" class="error" role="alert" hidden></p>
+
+    <!-- Choix du serveur -->
+    <form id="view-address" class="view" hidden>
+      <label>Adresse du serveur Gná
+        <input name="address" placeholder="10.0.1.20 ou gna.lan:8443" autocapitalize="none" spellcheck="false" autocomplete="url" required>
+      </label>
+      <p class="hint">Le port 8443 est utilisé si vous n'en indiquez pas.</p>
+      <button type="submit">Continuer</button>
+    </form>
+
+    <!-- Validation de l'empreinte du certificat -->
+    <section id="view-verify" class="view" hidden>
+      <p>Vérifiez que cette empreinte est identique à celle affichée sur le serveur par&nbsp;:</p>
+      <code class="cmd">sudo -u gna gna tls info</code>
+      <div class="fp-box">
+        <span class="fp-label" id="verify-server"></span>
+        <code id="verify-fp" class="fp"></code>
+      </div>
+      <p class="hint">L'application ne se connectera ensuite qu'à un serveur présentant exactement ce certificat.</p>
+      <button type="button" data-action="trust">Les empreintes sont identiques</button>
+      <button type="button" class="ghost" data-action="change">Annuler</button>
+    </section>
+
+    <!-- Certificat modifié -->
+    <section id="view-changed" class="view" hidden>
+      <p class="warn"><strong>Le certificat du serveur a changé.</strong> Ce peut être un certificat régénéré (changement d'adresse IP, réinstallation)… ou une tentative d'interception. La connexion a été bloquée.</p>
+      <div class="fp-box">
+        <span class="fp-label">Empreinte validée précédemment</span>
+        <code id="changed-old" class="fp old"></code>
+      </div>
+      <div class="fp-box">
+        <span class="fp-label">Nouvelle empreinte présentée</span>
+        <code id="changed-new" class="fp"></code>
+      </div>
+      <p class="hint">N'acceptez la nouvelle empreinte qu'après l'avoir comparée sur le serveur avec <code>sudo -u gna gna tls info</code>.</p>
+      <button type="button" class="danger" data-action="accept-new">J'ai vérifié, accepter la nouvelle empreinte</button>
+      <button type="button" class="ghost" data-action="settings">Annuler</button>
+    </section>
+
+    <!-- Serveur mémorisé -->
+    <section id="view-saved" class="view" hidden>
+      <div class="fp-box">
+        <span class="fp-label">Serveur</span>
+        <strong id="saved-address"></strong>
+        <span class="fp-label">Empreinte du certificat</span>
+        <code id="saved-fp" class="fp"></code>
+      </div>
+      <button type="button" data-action="connect">Se connecter</button>
+      <button type="button" class="ghost" data-action="change">Changer de serveur</button>
+    </section>
+
+    <!-- Connexion en cours -->
+    <section id="view-busy" class="view" hidden>
+      <p class="busy"><span class="spinner" aria-hidden="true"></span><span id="busy-text">Connexion…</span></p>
+    </section>
+  </main>
+</body>
+</html>

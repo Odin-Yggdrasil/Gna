@@ -1,0 +1,49 @@
+[Unit]
+Description=Gná - bastion multi-protocole
+Documentation=file:///usr/local/share/doc/gna/README.md
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=gna
+Group=gna
+ExecStart=/usr/local/bin/gna serve
+# /var/lib/gna (certificat HTTPS…), créé et réservé à l'utilisateur gna
+StateDirectory=gna
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=5
+# La configuration (et la clé maître) est lue dans /etc/gna/gna.env.
+
+# ---- Durcissement : le service n'a accès qu'au strict nécessaire ----
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ReadOnlyPaths=/etc/gna
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+# AF_NETLINK : lecture des adresses IP de la machine (certificat auto-signé)
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

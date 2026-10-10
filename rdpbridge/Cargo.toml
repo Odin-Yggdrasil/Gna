@@ -1,0 +1,32 @@
+[package]
+name = "gna-rdp"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.89"
+description = "Passerelle RDP → VNC de Gná (IronRDP) : les identifiants restent sur le serveur"
+
+publish = false
+
+[dependencies]
+ironrdp = { version = "0.17", features = ["connector", "session", "graphics", "input", "pdu", "svc", "core", "cliprdr", "rdpdr", "dvc", "displaycontrol"] }
+libc = "0.2"
+ironrdp-tokio = "0.10"
+sspi = "*"
+tokio = { version = "1", features = ["rt", "net", "io-util", "io-std", "macros", "sync", "time"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+flate2 = "1"
+x509-cert = "0.2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+# Correctif local : nom court du lecteur partagé (voir vendor/README.md).
+[patch.crates-io]
+ironrdp-rdpdr = { path = "vendor/ironrdp-rdpdr" }
