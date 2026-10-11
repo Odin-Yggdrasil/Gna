@@ -15,7 +15,7 @@
   <img alt="Go" src="https://img.shields.io/badge/Go-serveur-00ADD8?logo=go&logoColor=white">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-passerelle%20RDP%20%2B%20app-000000?logo=rust">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
-  <img alt="Licence" src="https://img.shields.io/badge/licence-propri%C3%A9taire-lightgrey">
+  <img alt="Licence" src="https://img.shields.io/badge/licence-propri%C3%A9taire%2C%20gratuite-lightgrey">
 </p>
 
 > Dans la mythologie nordique, Gná est la messagère de Frigg : elle voyage d'un monde à l'autre sur Hófvarpnir.
@@ -389,4 +389,4 @@ Le flux VNC entre Gná et la cible n'est pas chiffré par le protocole : limiter
 
 ## Licence
 
-Logiciel propriétaire, tous droits réservés (voir `LICENSE`). Les composants tiers inclus gardent leur propre licence (voir `THIRD-PARTY.md`).
+Logiciel propriétaire, **gratuit** : chacun peut le télécharger, l'installer et l'utiliser, à titre personnel ou professionnel. Le modifier, le redistribuer ou le vendre reste interdit sans l'accord de l'auteur (voir `LICENSE`). Les composants tiers inclus gardent leur propre licence (voir `THIRD-PARTY.md`).

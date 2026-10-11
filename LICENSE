@@ -1,15 +1,82 @@
+Licence d'utilisation de Gná
 Copyright © 2026 Geoffrey Hermange-Carnet. Tous droits réservés.
 
-Ce logiciel (« Gná ») et son code source sont la propriété exclusive de leur auteur.
-Ils sont fournis sans licence : aucune autorisation n'est accordée de copier,
-modifier, fusionner, publier, distribuer, sous-licencier, vendre ou utiliser ce
-logiciel, en tout ou en partie, sans l'accord écrit préalable de l'auteur.
+Ce logiciel (« Gná ») et son code source sont la propriété exclusive de leur
+auteur. Gná est un logiciel propriétaire mis gratuitement à disposition.
 
-Les composants tiers inclus dans ce dépôt restent soumis à leur propre licence,
-indiquée dans leurs dossiers respectifs (voir THIRD-PARTY.md).
+1. Utilisation autorisée
+
+   Toute personne, physique ou morale, peut gratuitement télécharger, installer
+   et utiliser Gná, à titre personnel ou professionnel, y compris au sein d'une
+   entreprise ou d'une administration, sur autant de machines que nécessaire.
+   Cette autorisation concerne les fichiers d'installation publiés par l'auteur
+   (paquets serveur et applications Windows, Linux et Android), sans modification.
+
+2. Restrictions
+
+   Sans l'accord écrit préalable de l'auteur, il est interdit :
+   - de modifier le logiciel ou d'en créer une œuvre dérivée ;
+   - de le redistribuer, de le publier ou de le mettre à disposition de tiers,
+     gratuitement ou non, en dehors des téléchargements officiels ;
+   - de le vendre, de le louer ou de le sous-licencier, y compris sous la forme
+     d'un service payant reposant principalement sur Gná ;
+   - de supprimer ou modifier les mentions de droits d'auteur et de licence ;
+   - de décompiler ou désassembler le logiciel, sauf dans les cas où la loi
+     l'autorise expressément (notamment pour l'interopérabilité).
+
+   Le code source n'est pas couvert par cette licence et reste confidentiel.
+
+3. Absence de garantie
+
+   Le logiciel est fourni « tel quel », sans garantie d'aucune sorte, expresse ou
+   implicite, notamment de bon fonctionnement, d'adéquation à un usage
+   particulier ou d'absence de défaut. Dans toute la mesure permise par la loi,
+   l'auteur ne pourra être tenu responsable d'aucun dommage, direct ou indirect,
+   résultant de l'utilisation ou de l'impossibilité d'utiliser le logiciel,
+   notamment de pertes de données ou d'interruptions de service.
+
+4. Fin de la licence
+
+   Cette autorisation prend fin automatiquement en cas de non-respect de ses
+   conditions. L'utilisateur doit alors cesser d'utiliser le logiciel et en
+   supprimer toutes les copies.
+
+5. Composants tiers
+
+   Les composants tiers inclus dans Gná restent soumis à leur propre licence,
+   indiquée dans leurs dossiers respectifs (voir THIRD-PARTY.md).
+
+6. Droit applicable
+
+   Cette licence est régie par le droit français.
 
 ---
 
+Gná license
 Copyright © 2026 Geoffrey Hermange-Carnet. All rights reserved.
-No license is granted to copy, modify, distribute or use this software, in whole
-or in part, without the author's prior written permission.
+
+Gná is proprietary software made available free of charge. The French version
+above prevails in case of discrepancy.
+
+1. Permitted use: anyone, individual or organization, may download, install
+   and use Gná free of charge, for personal or professional purposes, on as many
+   machines as needed. This applies to the unmodified installation files
+   published by the author (server package and Windows, Linux and Android apps).
+
+2. Restrictions: without the author's prior written permission, you may not
+   modify the software or create derivative works; redistribute or publish it
+   outside the official downloads; sell, rent or sublicense it, including as a
+   paid service mainly based on Gná; remove or alter copyright and license
+   notices; decompile or disassemble it, except where expressly permitted by
+   law. The source code is not covered by this license and remains confidential.
+
+3. No warranty: the software is provided "as is", without warranty of any kind.
+   To the extent permitted by law, the author shall not be liable for any damage
+   arising from its use or inability to use it.
+
+4. Termination: this license terminates automatically if its terms are not
+   complied with.
+
+5. Third-party components remain under their own licenses (see THIRD-PARTY.md).
+
+6. This license is governed by French law.

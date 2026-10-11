@@ -1,6 +1,6 @@
 # Composants tiers
 
-Gná est un logiciel propriétaire (voir `LICENSE`). Il inclut ou utilise les composants
+Gná est un logiciel propriétaire et gratuit (voir `LICENSE`). Il inclut ou utilise les composants
 suivants, qui restent soumis à leur propre licence :
 
 | Composant | Emplacement | Licence |
