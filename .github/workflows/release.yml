@@ -122,7 +122,8 @@ jobs:
       - name: Clé de signature
         if: env.HAS_KEYSTORE != 'true'
         working-directory: .
-        run: echo "::warning::Secrets ANDROID_KEYSTORE_* absents : pas d'APK Android pour cette version."
+        run: |
+          echo "::warning::Secrets ANDROID_KEYSTORE_* absents, pas d'APK Android pour cette version."
       - uses: actions/checkout@v4
         if: env.HAS_KEYSTORE == 'true'
       - uses: actions/setup-node@v4
