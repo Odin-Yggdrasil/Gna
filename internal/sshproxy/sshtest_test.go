@@ -135,12 +135,15 @@ func TestScanDialAndShell(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer sh.Close()
+	// L'écho de la saisie et la réponse au redimensionnement partent de deux goroutines
+	// du serveur de test : on attend l'un puis l'autre pour ne pas dépendre de leur ordre.
 	sh.Stdin.Write([]byte("bonjour"))
-	sh.Resize(120, 40)
-	got := readUntil(t, sh.Stdout, "[resize 120x40]")
-	if !strings.Contains(got, "Bienvenue") || !strings.Contains(got, "bonjour") {
+	got := readUntil(t, sh.Stdout, "bonjour")
+	if !strings.Contains(got, "Bienvenue") {
 		t.Errorf("sortie inattendue : %q", got)
 	}
+	sh.Resize(120, 40)
+	readUntil(t, sh.Stdout, "[resize 120x40]")
 }
 
 func TestHostKeyMismatch(t *testing.T) {
