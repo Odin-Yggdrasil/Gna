@@ -46,7 +46,7 @@ Résultat : `src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/Gná_<ve
 
 ### Toutes les versions + publication (GitHub Actions)
 
-Le fichier `.github/workflows/release.yml` compile **le serveur et les applications Linux, Windows et Android** sur GitHub, puis publie une **Release** avec tous les fichiers d'installation :
+Le fichier `.github/workflows/release.yml` compile **le serveur et les applications Linux et Windows** sur GitHub, puis publie une **Release** avec leurs fichiers d'installation (l'APK Android y est ajouté ensuite, voir ci-dessous) :
 
 ```bash
 # mettre à jour VERSION, app/package.json et app/src-tauri/tauri.conf.json, puis :
@@ -55,15 +55,29 @@ git tag v0.13.0 && git push origin v0.13.0
 
 Sans étiquette (Actions → **Publication** → **Run workflow**), les fichiers sont seulement disponibles dans les **Artifacts** de l'exécution.
 
-**Android** : l'APK est signé avec ta clé (`gna-android.jks`, à conserver précieusement : sans elle, impossible de publier une mise à jour installable par-dessus). Secrets à créer (Settings → Secrets and variables → Actions) :
+### Android (sur ta machine)
 
-| Secret | Valeur |
-|---|---|
-| `ANDROID_KEYSTORE_B64` | résultat de `base64 -w0 gna-android.jks` |
-| `ANDROID_KEYSTORE_PASSWORD` | mot de passe du keystore |
-| `ANDROID_KEY_ALIAS` | `gna` |
+L'APK est compilé et signé en local, puis ajouté à la Release. Préparation (une seule fois, Debian/Ubuntu) :
 
-Sans ces secrets, la publication se fait sans APK. Le script `scripts/android-patch.sh` (lancé par le workflow) autorise le HTTP en clair **uniquement** vers `127.0.0.1`, installe les icônes et confie les téléchargements au gestionnaire de téléchargements d'Android (dossier « Download »).
+```bash
+sudo apt install openjdk-17-jdk unzip
+# SDK Android en ligne de commande : https://developer.android.com/studio#command-tools
+mkdir -p ~/Android/Sdk/cmdline-tools && cd ~/Android/Sdk/cmdline-tools
+unzip ~/Téléchargements/commandlinetools-linux-*_latest.zip && mv cmdline-tools latest
+export ANDROID_HOME=~/Android/Sdk PATH=$PATH:~/Android/Sdk/cmdline-tools/latest/bin   # à ajouter aussi dans ~/.bashrc
+sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.0.12077973"
+rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+```
+
+Compilation :
+
+```bash
+cd app && npm ci
+GNA_KEYSTORE=~/chemin/gna-android.jks ./scripts/build-android.sh     # le mot de passe est demandé
+gh release upload v0.13.0 Gna-0.13.0-android.apk                     # ou dépôt manuel sur la page de la Release
+```
+
+La clé `gna-android.jks` est à conserver précieusement : sans elle, impossible de publier une mise à jour qui s'installe par-dessus l'ancienne version. Le script `scripts/android-patch.sh` (lancé automatiquement) autorise le HTTP en clair **uniquement** vers `127.0.0.1`, installe les icônes et confie les téléchargements au gestionnaire de téléchargements d'Android (dossier « Download »).
 
 ## Structure
 

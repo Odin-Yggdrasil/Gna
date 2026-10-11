@@ -10,3 +10,5 @@ rdpbridge/target/
 /go.dev.mod
 /go.dev.sum
 *.deb
+*.apk
+*.jks

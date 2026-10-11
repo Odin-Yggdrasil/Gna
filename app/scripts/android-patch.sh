@@ -23,7 +23,7 @@ sed -i -E 's#android:usesCleartextTraffic="[^"]*"#android:networkSecurityConfig=
 grep -q 'networkSecurityConfig' "$MAIN/AndroidManifest.xml" || \
   sed -i 's#<application#<application android:networkSecurityConfig="@xml/network_security_config"#' "$MAIN/AndroidManifest.xml"
 # Icônes de l'application (logo Gná) dans le projet Android.
-npx tauri icon app-icon.png >/dev/null
+cp -r src-tauri/icons/android/. "$MAIN/res/"
 
 # Téléchargements (fichiers SFTP, transferts RDP) : le WebView Android les ignore par
 # défaut. On les confie au gestionnaire de téléchargements d'Android, qui les enregistre
