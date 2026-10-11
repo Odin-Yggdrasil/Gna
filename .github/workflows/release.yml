@@ -6,8 +6,8 @@
 # Déclenchement :
 #   - en poussant une étiquette de version :  git tag v0.13.0 && git push origin v0.13.0
 #     (le numéro doit correspondre au fichier VERSION) → compilation + Release ;
-#   - à la main (Actions → « Publication » → Run workflow) → compilation seule, fichiers
-#     récupérables dans les « Artifacts » de l'exécution, sans Release.
+#   - à la main (Actions → « Publication » → Run workflow) : compilation seule (fichiers dans
+#     les « Artifacts » de l'exécution), ou Release complète en cochant « Publier ».
 
 name: Publication
 
@@ -15,6 +15,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      publier:
+        description: "Publier la Release (crée l'étiquette v<VERSION>)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -106,7 +111,7 @@ jobs:
           path: out/*
 
   release:
-    if: github.ref_type == 'tag' && !cancelled() && needs.server.result == 'success' && needs.app-linux.result == 'success' && needs.app-windows.result == 'success'
+    if: (github.ref_type == 'tag' || inputs.publier) && !cancelled() && needs.server.result == 'success' && needs.app-linux.result == 'success' && needs.app-windows.result == 'success'
     needs: [version, server, app-linux, app-windows]
     runs-on: ubuntu-22.04
     permissions:
@@ -128,5 +133,5 @@ jobs:
           if gh release view "v$V" >/dev/null 2>&1; then
             gh release upload "v$V" files/* --clobber
           else
-            gh release create "v$V" files/* --title "Gná $V" --notes-file "$NOTES"
+            gh release create "v$V" files/* --target "$GITHUB_SHA" --title "Gná $V" --notes-file "$NOTES"
           fi
