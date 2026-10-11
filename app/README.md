@@ -44,24 +44,26 @@ cd app && npm ci
 
 Résultat : `src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/Gná_<version>_x64-setup.exe` (installeur en français, installé pour l'utilisateur courant, sans droits administrateur ; WebView2 est installé automatiquement s'il manque, ce qui est rare sous Windows 10 et 11).
 
-### Windows, Linux et Android (GitHub Actions)
+### Toutes les versions + publication (GitHub Actions)
 
-Le fichier `.github/workflows/app.yml` compile les trois versions sur GitHub :
-
-1. Pousser le projet sur un dépôt GitHub.
-2. Onglet **Actions** → **Application Gná** → **Run workflow** (ou pousser une étiquette `app-v0.1.0`).
-3. Récupérer les fichiers dans les **Artifacts** de l'exécution : `.deb`/`.AppImage`, `.exe`/`.msi`, `.apk`.
-
-Pour un APK Android signé avec ta propre clé (sinon : APK de débogage, installable mais signé avec une clé de test) :
+Le fichier `.github/workflows/release.yml` compile **le serveur et les applications Linux, Windows et Android** sur GitHub, puis publie une **Release** avec tous les fichiers d'installation :
 
 ```bash
-keytool -genkey -v -keystore gna.jks -alias gna -keyalg RSA -keysize 4096 -validity 10000
-base64 -w0 gna.jks   # à coller dans le secret ANDROID_KEYSTORE_B64
+# mettre à jour VERSION, app/package.json et app/src-tauri/tauri.conf.json, puis :
+git tag v0.13.0 && git push origin v0.13.0
 ```
 
-Secrets à créer (Settings → Secrets and variables → Actions) : `ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`.
+Sans étiquette (Actions → **Publication** → **Run workflow**), les fichiers sont seulement disponibles dans les **Artifacts** de l'exécution.
 
-Sur Android, le script `scripts/android-patch.sh` (lancé par le workflow) autorise le HTTP en clair **uniquement** vers `127.0.0.1`.
+**Android** : l'APK est signé avec ta clé (`gna-android.jks`, à conserver précieusement : sans elle, impossible de publier une mise à jour installable par-dessus). Secrets à créer (Settings → Secrets and variables → Actions) :
+
+| Secret | Valeur |
+|---|---|
+| `ANDROID_KEYSTORE_B64` | résultat de `base64 -w0 gna-android.jks` |
+| `ANDROID_KEYSTORE_PASSWORD` | mot de passe du keystore |
+| `ANDROID_KEY_ALIAS` | `gna` |
+
+Sans ces secrets, la publication se fait sans APK. Le script `scripts/android-patch.sh` (lancé par le workflow) autorise le HTTP en clair **uniquement** vers `127.0.0.1`, installe les icônes et confie les téléchargements au gestionnaire de téléchargements d'Android (dossier « Download »).
 
 ## Structure
 

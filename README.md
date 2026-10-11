@@ -22,6 +22,17 @@
 
 ![Écran d'accueil : espaces de travail et machines groupées par dossier](docs/images/accueil.png)
 
+## Télécharger
+
+Les fichiers d'installation de chaque version sont dans les [**Releases**](../../releases/latest) :
+
+| Fichier | Pour |
+|---|---|
+| `gna-server_<version>_amd64.deb` | le **serveur** (Debian 12+, Ubuntu 22.04+) |
+| `gna-app_<version>_amd64.deb` / `Gna-<version>-x86_64.AppImage` | l'application **Linux** |
+| `Gna-<version>-windows-setup.exe` | l'application **Windows** 10/11 |
+| `Gna-<version>-android.apk` | l'application **Android** 7+ |
+
 ## Fonctionnalités
 
 | | |

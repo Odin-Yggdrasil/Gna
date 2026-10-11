@@ -1,0 +1,199 @@
+# Publication d'une version de Gná : serveur (.deb), application Linux (.deb, AppImage),
+# Windows (installeur .exe) et Android (.apk), puis création de la « Release » GitHub.
+#
+# Déclenchement :
+#   - en poussant une étiquette de version :  git tag v0.13.0 && git push origin v0.13.0
+#     (le numéro doit correspondre au fichier VERSION) → compilation + Release ;
+#   - à la main (Actions → « Publication » → Run workflow) → compilation seule, fichiers
+#     récupérables dans les « Artifacts » de l'exécution, sans Release.
+#
+# Signature Android (Settings → Secrets and variables → Actions) :
+#   ANDROID_KEYSTORE_B64       le fichier .jks encodé en base64 (base64 -w0 gna-android.jks)
+#   ANDROID_KEYSTORE_PASSWORD  le mot de passe du keystore
+#   ANDROID_KEY_ALIAS          l'alias de la clé (gna)
+# Sans ces secrets, l'APK n'est pas produit (une clé de test changerait à chaque version
+# et empêcherait les mises à jour).
+
+name: Publication
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          V=$(cat VERSION)
+          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "v$V" ]]; then
+            echo "::error::L'étiquette $GITHUB_REF_NAME ne correspond pas au fichier VERSION ($V)"; exit 1
+          fi
+          for f in app/src-tauri/tauri.conf.json app/package.json; do
+            grep -q "\"version\": \"$V\"" "$f" || { echo "::error::$f n'est pas en version $V"; exit 1; }
+          done
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+  server:
+    needs: version
+    runs-on: ubuntu-22.04   # glibc 2.35 : paquet compatible Debian 12+ et Ubuntu 22.04+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: dtolnay/rust-toolchain@stable
+      - run: make build
+      - run: go test ./...
+      - run: ./deploy/deb/build.sh ${{ needs.version.outputs.version }}
+      - run: mv dist/gna_*_amd64.deb "dist/gna-server_${{ needs.version.outputs.version }}_amd64.deb"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server
+          path: dist/*.deb
+
+  app-linux:
+    needs: version
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: dtolnay/rust-toolchain@stable
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
+      - run: npm ci
+      - run: npx tauri build --bundles deb,appimage
+      - run: |
+          V=${{ needs.version.outputs.version }}
+          mkdir -p ../out
+          cp src-tauri/target/release/bundle/deb/*.deb "../out/gna-app_${V}_amd64.deb"
+          cp src-tauri/target/release/bundle/appimage/*.AppImage "../out/Gna-${V}-x86_64.AppImage"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-linux
+          path: out/*
+
+  app-windows:
+    needs: version
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - run: npx tauri build --bundles nsis
+      - run: |
+          mkdir -p ../out
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe "../out/Gna-${{ needs.version.outputs.version }}-windows-setup.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-windows
+          path: out/*
+
+  app-android:
+    needs: version
+    runs-on: ubuntu-22.04
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Clé de signature
+        if: env.HAS_KEYSTORE != 'true'
+        working-directory: .
+        run: echo "::warning::Secrets ANDROID_KEYSTORE_* absents : pas d'APK Android pour cette version."
+      - uses: actions/checkout@v4
+        if: env.HAS_KEYSTORE == 'true'
+      - uses: actions/setup-node@v4
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+        if: env.HAS_KEYSTORE == 'true'
+      - name: NDK
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          sdkmanager "ndk;27.0.12077973"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> "$GITHUB_ENV"
+      - uses: dtolnay/rust-toolchain@stable
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
+      - if: env.HAS_KEYSTORE == 'true'
+        run: npm ci
+      - name: Projet Android
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          npx tauri android init --ci
+          bash scripts/android-patch.sh
+      - name: APK signé
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          npx tauri android build --apk --target aarch64 --target armv7 --target x86_64
+          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > "$RUNNER_TEMP/gna.jks"
+          APK=$(find src-tauri/gen/android/app/build/outputs/apk -name '*-unsigned.apk' | head -1)
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/zipalign" -f 4 "$APK" "$RUNNER_TEMP/aligned.apk"
+          mkdir -p ../out
+          "$BT/apksigner" sign --ks "$RUNNER_TEMP/gna.jks" --ks-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+            --out "../out/Gna-${{ needs.version.outputs.version }}-android.apk" "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" verify "../out/Gna-${{ needs.version.outputs.version }}-android.apk"
+          rm -f "$RUNNER_TEMP/gna.jks"
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          name: app-android
+          path: out/*
+
+  release:
+    if: github.ref_type == 'tag' && !cancelled() && needs.server.result == 'success' && needs.app-linux.result == 'success' && needs.app-windows.result == 'success'
+    needs: [version, server, app-linux, app-windows, app-android]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: files
+          merge-multiple: true
+      - name: Release GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=${{ needs.version.outputs.version }}
+          cd files && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt && cd ..
+          NOTES=docs/releases/$V.md
+          [[ -f $NOTES ]] || { echo "Gná $V" > /tmp/notes.md; NOTES=/tmp/notes.md; }
+          if gh release view "v$V" >/dev/null 2>&1; then
+            gh release upload "v$V" files/* --clobber
+          else
+            gh release create "v$V" files/* --title "Gná $V" --notes-file "$NOTES"
+          fi
