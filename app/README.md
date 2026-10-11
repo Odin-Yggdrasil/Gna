@@ -33,6 +33,17 @@ npx tauri build --bundles deb,appimage
 
 Résultat dans `src-tauri/target/release/bundle/`. Sous Linux, le paquet s'appelle `gna-app` (le paquet `gna` est le serveur).
 
+### Windows, depuis Linux
+
+```bash
+sudo apt install mingw-w64 nsis
+rustup target add x86_64-pc-windows-gnu
+cd app && npm ci
+./scripts/build-windows.sh            # BUILD_STD=1 si la cible ne peut pas être téléchargée
+```
+
+Résultat : `src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/Gná_<version>_x64-setup.exe` (installeur en français, installé pour l'utilisateur courant, sans droits administrateur ; WebView2 est installé automatiquement s'il manque, ce qui est rare sous Windows 10 et 11).
+
 ### Windows, Linux et Android (GitHub Actions)
 
 Le fichier `.github/workflows/app.yml` compile les trois versions sur GitHub :
