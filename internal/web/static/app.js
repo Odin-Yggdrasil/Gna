@@ -63,8 +63,8 @@ function showScreen(name) {
 
 function showAuthView(view) {
   showScreen("auth");
-  for (const v of ["login", "mfa", "enroll"]) $(`#view-${v}`).hidden = v !== view;
-  const first = $(`#view-${view} input`);
+  for (const v of ["login", "mfa", "lock", "enroll"]) $(`#view-${v}`).hidden = v !== view;
+  const first = $(`#view-${view} input:not([hidden])`);
   if (first) first.focus();
 }
 
@@ -77,8 +77,14 @@ async function route() {
     state.me = null;
     return showAuthView("login");
   }
+  if (me.stage !== "full") state.me = null;
   if (me.stage === "mfa") return showAuthView("mfa");
   if (me.stage === "enroll") return startEnroll();
+  if (me.stage === "locked") {
+    $("#lock-user").textContent = me.username;
+    $("#view-lock").elements.username.value = me.username;
+    return showAuthView("lock");
+  }
   state.me = me;
   applyTheme((me.prefs && me.prefs.theme) || "system");
   $("#me-name").textContent = me.username;
@@ -132,6 +138,30 @@ function onSubmit(form, handler) {
 onSubmit($("#view-login"), (f) =>
   api("POST", "/api/auth/login", { username: f.get("username"), password: f.get("password") }));
 onSubmit($("#view-mfa"), (f) => api("POST", "/api/auth/totp/verify", { code: f.get("code") }));
+onSubmit($("#view-lock"), (f) => api("POST", "/api/auth/unlock", { password: f.get("password") }));
+
+// ---------- inactivité ----------
+// Toutes les 30 s, l'interface demande au serveur l'état de la session en signalant s'il y a
+// eu une action réelle (clavier, souris, toucher) depuis la vérification précédente : seule
+// l'activité repousse le verrouillage. Si la session a été verrouillée ou fermée côté
+// serveur, l'écran correspondant s'affiche aussitôt.
+const activity = { last: Date.now(), sent: 0 };
+for (const type of ["keydown", "pointerdown", "pointermove", "wheel", "touchstart"]) {
+  window.addEventListener(type, () => { activity.last = Date.now(); }, { capture: true, passive: true });
+}
+async function pingSession() {
+  if (!state.me) return;
+  const active = activity.last > activity.sent;
+  activity.sent = Date.now();
+  try {
+    const r = await api("POST", "/api/auth/ping", { active });
+    if (r.stage !== "full") route();
+  } catch (e) {
+    if (e.status === 401) route();
+  }
+}
+setInterval(pingSession, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pingSession(); });
 onSubmit($("#view-enroll"), (f) => api("POST", "/api/auth/totp/enroll/confirm", { code: f.get("code") }));
 
 // ---------- cibles ----------

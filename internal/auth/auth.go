@@ -6,6 +6,14 @@
 //	                       └──► session "enroll" ──► QR + code ──► session "full"  (premier login)
 //
 // Les sessions intermédiaires durent 5 minutes et ne donnent accès à rien d'autre.
+//
+// Après inactivité (GNA_IDLE_TIMEOUT), une session complète est verrouillée :
+//
+//	session "full" ──inactivité──► "locked" ──mot de passe──► "full"   (code TOTP récent)
+//	                         └──► supprimée : connexion complète       (code TOTP trop ancien)
+//
+// Le mot de passe seul suffit tant que le dernier code TOTP date de moins de
+// GNA_MFA_REMEMBER (4 h par défaut). L'expiration absolue (GNA_SESSION_TTL) reste inchangée.
 package auth
 
 import (
@@ -28,6 +36,7 @@ const (
 	StageMFA    = "mfa"
 	StageEnroll = "enroll"
 	StageFull   = "full"
+	StageLocked = "locked"
 
 	preAuthTTL = 5 * time.Minute
 )
@@ -144,7 +153,31 @@ func (s *Service) VerifyTOTP(ctx context.Context, id *Identity, code string, c C
 		s.failure(ctx, u, c, "bad_totp")
 		return "", ErrInvalidCode
 	}
-	return s.promote(ctx, id, c, "login.success")
+	now := s.now()
+	return s.promote(ctx, id, c, "login.success", s.now().Add(s.cfg.SessionTTL), &now)
+}
+
+// Unlock déverrouille une session verrouillée par inactivité avec le seul mot de passe.
+// L'expiration absolue et l'heure du dernier code TOTP sont conservées.
+func (s *Service) Unlock(ctx context.Context, id *Identity, password string, c Client) (string, time.Time, error) {
+	if id.Session.Stage != StageLocked {
+		return "", time.Time{}, ErrWrongStage
+	}
+	u := id.User
+	ok, err := secure.VerifyPassword(password, u.PasswordHash)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	switch {
+	case u.LockedUntil != nil && u.LockedUntil.After(s.now()):
+		s.audit(ctx, &u.ID, u.Username, "unlock.failed", c, map[string]any{"reason": "locked"})
+		return "", time.Time{}, ErrInvalidCredentials
+	case !ok:
+		s.failure(ctx, u, c, "bad_password_unlock")
+		return "", time.Time{}, ErrInvalidCredentials
+	}
+	token, err := s.promote(ctx, id, c, "session.unlocked", id.Session.ExpiresAt, id.Session.MFAAt)
+	return token, id.Session.ExpiresAt, err
 }
 
 // StartEnrollment génère un nouveau secret TOTP et renvoie l'URI otpauth://
@@ -193,15 +226,16 @@ func (s *Service) ConfirmEnrollment(ctx context.Context, id *Identity, code stri
 		return "", err
 	}
 	s.audit(ctx, &u.ID, u.Username, "mfa.enrolled", c, nil)
-	return s.promote(ctx, &Identity{Session: id.Session, User: u, Token: id.Token}, c, "login.success")
+	now := s.now()
+	return s.promote(ctx, &Identity{Session: id.Session, User: u, Token: id.Token}, c, "login.success", s.now().Add(s.cfg.SessionTTL), &now)
 }
 
-func (s *Service) promote(ctx context.Context, id *Identity, c Client, event string) (string, error) {
+func (s *Service) promote(ctx context.Context, id *Identity, c Client, event string, expires time.Time, mfaAt *time.Time) (string, error) {
 	token, hash, err := newToken()
 	if err != nil {
 		return "", err
 	}
-	if err := s.st.RotateSession(ctx, id.Session.TokenHash, hash, StageFull, s.now().Add(s.cfg.SessionTTL)); err != nil {
+	if err := s.st.RotateSession(ctx, id.Session.TokenHash, hash, StageFull, expires, mfaAt); err != nil {
 		if errors.Is(err, store.ErrNotFound) {
 			return "", ErrUnauthenticated
 		}
@@ -220,8 +254,15 @@ func (s *Service) Logout(ctx context.Context, id *Identity, c Client) error {
 }
 
 // Authenticate retrouve la session associée à un jeton. Elle applique l'expiration
-// absolue et le délai d'inactivité, et vérifie que le compte est toujours actif.
+// absolue et le délai d'inactivité (verrouillage), et vérifie que le compte est
+// toujours actif. Chaque requête compte comme une activité de l'utilisateur.
 func (s *Service) Authenticate(ctx context.Context, token string) (*Identity, error) {
+	return s.Check(ctx, token, true)
+}
+
+// Check est Authenticate sans compter la requête comme une activité quand active est
+// faux (vérification périodique de l'interface : elle ne doit pas empêcher le verrouillage).
+func (s *Service) Check(ctx context.Context, token string, active bool) (*Identity, error) {
 	if token == "" {
 		return nil, ErrUnauthenticated
 	}
@@ -235,6 +276,12 @@ func (s *Service) Authenticate(ctx context.Context, token string) (*Identity, er
 	}
 	now := s.now()
 	if se.Stage == StageFull && now.Sub(se.LastSeenAt) > s.cfg.IdleTimeout {
+		if !s.expireIdle(ctx, se) {
+			return nil, ErrUnauthenticated
+		}
+		se.Stage = StageLocked
+	}
+	if se.Stage == StageLocked && !s.canUnlock(se) {
 		_ = s.st.DeleteSession(ctx, hash)
 		return nil, ErrUnauthenticated
 	}
@@ -244,10 +291,33 @@ func (s *Service) Authenticate(ctx context.Context, token string) (*Identity, er
 		return nil, ErrUnauthenticated
 	}
 	// Limiter les écritures : on ne met à jour last_seen qu'une fois par minute.
-	if now.Sub(se.LastSeenAt) > time.Minute {
+	if active && se.Stage == StageFull && now.Sub(se.LastSeenAt) > time.Minute {
 		_ = s.st.TouchSession(ctx, hash)
+		se.LastSeenAt = now
 	}
 	return &Identity{Session: se, User: u, Token: token}, nil
+}
+
+// IdleLeft renvoie le temps restant avant le verrouillage d'une session complète.
+func (s *Service) IdleLeft(se *store.Session) time.Duration {
+	return s.cfg.IdleTimeout - s.now().Sub(se.LastSeenAt)
+}
+
+// canUnlock indique si le mot de passe seul peut encore déverrouiller la session.
+func (s *Service) canUnlock(se *store.Session) bool {
+	return s.cfg.MFARemember > 0 && se.MFAAt != nil && s.now().Sub(*se.MFAAt) < s.cfg.MFARemember
+}
+
+// expireIdle applique l'inactivité : verrouille la session si le dernier code TOTP est
+// assez récent (renvoie vrai), sinon la supprime (renvoie faux).
+func (s *Service) expireIdle(ctx context.Context, se *store.Session) bool {
+	if s.canUnlock(se) {
+		if err := s.st.LockSession(ctx, se.TokenHash); err == nil {
+			return true
+		}
+	}
+	_ = s.st.DeleteSession(ctx, se.TokenHash)
+	return false
 }
 
 // Revalidate revérifie périodiquement une session pendant une connexion longue (terminal).
@@ -263,8 +333,11 @@ func (s *Service) Revalidate(ctx context.Context, token string, active bool) (*s
 	if err != nil {
 		return nil, err
 	}
+	if se.Stage != StageFull {
+		return nil, ErrUnauthenticated
+	}
 	if !active && s.now().Sub(se.LastSeenAt) > s.cfg.IdleTimeout {
-		_ = s.st.DeleteSession(ctx, hash)
+		s.expireIdle(ctx, se)
 		return nil, ErrUnauthenticated
 	}
 	u, err := s.st.UserByID(ctx, se.UserID)

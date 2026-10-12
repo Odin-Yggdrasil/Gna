@@ -51,6 +51,16 @@
         <button type="button" class="link" data-action="logout">Annuler</button>
       </form>
 
+      <form id="view-lock" class="view" hidden>
+        <p>Session verrouillée après inactivité. Saisissez le mot de passe de <strong id="lock-user"></strong> pour reprendre.</p>
+        <input name="username" autocomplete="username" hidden>
+        <label>Mot de passe
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit">Déverrouiller</button>
+        <button type="button" class="link" data-action="logout">Changer d'utilisateur</button>
+      </form>
+
       <form id="view-enroll" class="view" hidden>
         <p>La double authentification est obligatoire. Scannez ce QR code avec Aegis, 2FAS, Bitwarden ou Google Authenticator.</p>
         <img id="qr" class="qr" alt="QR code de configuration TOTP">

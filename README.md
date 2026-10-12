@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-5FB3A1">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.14.0-5FB3A1">
   <img alt="Go" src="https://img.shields.io/badge/Go-serveur-00ADD8?logo=go&logoColor=white">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-passerelle%20RDP%20%2B%20app-000000?logo=rust">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
@@ -53,7 +53,14 @@ Les fichiers d'installation de chaque version sont dans les [**Releases**](../..
 
 ![Les thèmes : Sombre, Clair, Nord, Dracula, Gruvbox, Solarized](docs/images/themes.png)
 
-## État : étape 13 — thèmes et application Linux à jour
+## État : étape 14 — verrouillage après inactivité
+
+- **Verrouillage au lieu de déconnexion** : après 30 min sans activité (`GNA_IDLE_TIMEOUT`), la session est verrouillée. Le **mot de passe seul** la déverrouille tant que le dernier code TOTP date de moins de 4 h (`GNA_MFA_REMEMBER`) ; au-delà, connexion complète avec code TOTP. L'expiration absolue (`GNA_SESSION_TTL`, 12 h) ne change pas
+- **L'interface suit l'état du serveur** : toutes les 30 s, elle vérifie la session ; un verrouillage ou une fin de session côté serveur affiche aussitôt l'écran correspondant (plus d'interface « connectée » qui ne peut plus rien ouvrir)
+- **Seule l'activité réelle compte** (clavier, souris, toucher, saisie dans un terminal ou un bureau) : laisser la page ouverte ne repousse pas le verrouillage. Les connexions aux machines sont coupées au verrouillage ; un clic sur « Reconnecter » les rouvre après déverrouillage
+- « Changer d'utilisateur » depuis l'écran de verrouillage ferme la session
+
+## Étape 13 — thèmes et application Linux à jour
 
 - **Thèmes** : « Mon compte » → Thème : Système (suit le réglage clair/sombre de l'ordinateur), Sombre, Clair, Nord, Dracula, Gruvbox, Solarized. Le thème s'applique tout de suite, terminaux et bureaux à distance compris (couleurs ANSI adaptées à chaque thème), et il est **enregistré dans le compte** : il suit l'utilisateur d'un navigateur ou d'un appareil à l'autre
 - **Application Linux** (paquet `gna-app`, pour ne plus se confondre avec le paquet serveur `gna`) : téléchargements SFTP et RDP enregistrés dans le dossier Téléchargements (sans écraser un fichier existant, message de confirmation), relais local sur un port stable (les réglages de la page sont conservés d'un lancement à l'autre)
@@ -184,7 +191,7 @@ Gná tourne en natif : un binaire statique, un service systemd durci, un utilisa
 ### Avec le paquet .deb (recommandé)
 
 ```bash
-sudo apt install ./gna_0.13.0_amd64.deb      # installe aussi PostgreSQL si besoin
+sudo apt install ./gna_0.14.0_amd64.deb      # installe aussi PostgreSQL si besoin
 sudo -u gna gna user add admin --admin
 ```
 
@@ -268,7 +275,8 @@ Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : `echo "�
 | `GNA_COOKIE_SECURE` | `true` | Cookie réservé au HTTPS (forcé à `true` quand Gná sert du HTTPS) |
 | `GNA_TRUST_PROXY` | `false` | Lire l'IP client dans `X-Forwarded-For` (derrière un reverse proxy) |
 | `GNA_SESSION_TTL` | `12h` | Durée maximale d'une session |
-| `GNA_IDLE_TIMEOUT` | `30m` | Déconnexion après inactivité |
+| `GNA_IDLE_TIMEOUT` | `30m` | Verrouillage de la session après inactivité |
+| `GNA_MFA_REMEMBER` | `4h` | Déverrouillage par mot de passe seul tant que le dernier code TOTP date de moins de cette durée (`off` : code à chaque fois) |
 | `GNA_MAX_FAILURES` | `5` | Échecs avant verrouillage |
 | `GNA_LOCK_DURATION` | `15m` | Durée du verrouillage |
 | `GNA_ISSUER` | `Gná` | Nom affiché dans l'application TOTP |
@@ -386,6 +394,7 @@ Le flux VNC entre Gná et la cible n'est pas chiffré par le protocole : limiter
 11. ~~Mosaïque et saisie synchronisée (SSH)~~
 12. ~~Organisation des machines (dossiers), bibliothèque de commandes, espaces de travail~~
 13. ~~Thèmes, mise à jour de l'application Linux~~
+14. ~~Verrouillage après inactivité (mot de passe seul pendant 4 h)~~
 
 ## Licence
 

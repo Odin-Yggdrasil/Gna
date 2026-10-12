@@ -18,7 +18,8 @@ type Config struct {
 	MasterKey    []byte        // GNA_MASTER_KEY : 32 octets en base64 (obligatoire)
 	CookieSecure bool          // GNA_COOKIE_SECURE (défaut true, mettre false uniquement en dev HTTP)
 	SessionTTL   time.Duration // GNA_SESSION_TTL : durée max d'une session (défaut 12h)
-	IdleTimeout  time.Duration // GNA_IDLE_TIMEOUT : déconnexion après inactivité (défaut 30m)
+	IdleTimeout  time.Duration // GNA_IDLE_TIMEOUT : verrouillage après inactivité (défaut 30m)
+	MFARemember  time.Duration // GNA_MFA_REMEMBER : après inactivité, le mot de passe seul suffit tant que le dernier code TOTP date de moins de cette durée (défaut 4h, « off » = code à chaque fois)
 	Issuer       string        // GNA_ISSUER : nom affiché dans l'appli TOTP (défaut "Gná")
 	TrustProxy   bool          // GNA_TRUST_PROXY : lire l'IP client dans X-Forwarded-For (défaut false)
 	MaxFailures  int           // GNA_MAX_FAILURES : échecs avant verrouillage (défaut 5)
@@ -72,6 +73,7 @@ func Load() (*Config, error) {
 		CookieSecure: true,
 		SessionTTL:   12 * time.Hour,
 		IdleTimeout:  30 * time.Minute,
+		MFARemember:  4 * time.Hour,
 		MaxFailures:  5,
 		LockDuration: 15 * time.Minute,
 	}
@@ -126,6 +128,11 @@ func Load() (*Config, error) {
 	c.TrustProxy = parseBool("GNA_TRUST_PROXY", false, &errs)
 	c.SessionTTL = parseDur("GNA_SESSION_TTL", c.SessionTTL, &errs)
 	c.IdleTimeout = parseDur("GNA_IDLE_TIMEOUT", c.IdleTimeout, &errs)
+	if v := strings.ToLower(strings.TrimSpace(os.Getenv("GNA_MFA_REMEMBER"))); v == "off" || v == "0" {
+		c.MFARemember = 0
+	} else {
+		c.MFARemember = parseDur("GNA_MFA_REMEMBER", c.MFARemember, &errs)
+	}
 	c.LockDuration = parseDur("GNA_LOCK_DURATION", c.LockDuration, &errs)
 	if v := os.Getenv("GNA_MAX_FAILURES"); v != "" {
 		n, err := strconv.Atoi(v)
