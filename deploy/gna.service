@@ -43,6 +43,9 @@ RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallFilter=~@privileged @resources
+# Un appel interdit échoue (EPERM) au lieu de tuer le service : le runtime Go tente par
+# exemple d'augmenter la limite de fichiers ouverts (setrlimit) et se passe très bien d'un refus.
+SystemCallErrorNumber=EPERM
 UMask=0077
 
 [Install]
