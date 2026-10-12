@@ -131,7 +131,13 @@ jobs:
           NOTES=docs/releases/$V.md
           [[ -f $NOTES ]] || { echo "Gná $V" > /tmp/notes.md; NOTES=/tmp/notes.md; }
           if gh release view "v$V" >/dev/null 2>&1; then
+            # Release existante (correctif) : l'étiquette est déplacée sur ce commit,
+            # les fichiers et les notes sont remplacés.
+            if [[ "$GITHUB_REF_TYPE" != tag ]]; then
+              git tag -f "v$V" "$GITHUB_SHA" && git push -f origin "refs/tags/v$V"
+            fi
             gh release upload "v$V" files/* --clobber
+            gh release edit "v$V" --notes-file "$NOTES"
           else
             gh release create "v$V" files/* --target "$GITHUB_SHA" --title "Gná $V" --notes-file "$NOTES"
           fi

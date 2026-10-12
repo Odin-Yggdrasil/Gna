@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.14.1-5FB3A1">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.14.0-5FB3A1">
   <img alt="Go" src="https://img.shields.io/badge/Go-serveur-00ADD8?logo=go&logoColor=white">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-passerelle%20RDP%20%2B%20app-000000?logo=rust">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
@@ -191,7 +191,7 @@ Gná tourne en natif : un binaire statique, un service systemd durci, un utilisa
 ### Avec le paquet .deb (recommandé)
 
 ```bash
-sudo apt install ./gna_0.14.1_amd64.deb      # installe aussi PostgreSQL si besoin
+sudo apt install ./gna_0.14.0_amd64.deb      # installe aussi PostgreSQL si besoin
 sudo -u gna gna user add admin --admin
 ```
 
