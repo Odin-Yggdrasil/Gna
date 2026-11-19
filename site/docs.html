@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Documentation — Gná</title>
+  <meta name="description" content="Documentation de Gná : installation, configuration, cibles SSH, RDP et VNC, utilisation, enregistrements, application et API.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0E1116">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css?v=20261011">
+  <script src="theme-init.js?v=20261011"></script>
+  <script defer data-domain="gna.gjallarbru.ovh" src="https://plausible.gjallarbru.ovh/js/script.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="index.html" aria-label="Gná, accueil">
+      <img src="assets/gna-icone.svg" alt="" width="36" height="36">
+      <span>Gná <small>Documentation</small></span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="index.html#fonctionnalites">Fonctionnalités</a>
+      <a href="index.html#securite">Sécurité</a>
+      <a href="index.html#telecharger">Télécharger</a>
+      <a class="nav-doc" href="docs.html">Documentation</a>
+    </nav>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="theme-toggle" type="button" aria-label="Changer de thème" title="Changer de thème">
+        <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+      <button class="icon-btn menu-btn" id="menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap docs">
+
+  <details class="toc" id="toc" open>
+    <summary>Sommaire</summary>
+    <nav>
+      <p>Démarrer</p>
+      <a href="#presentation">Présentation</a>
+      <a href="#installation">Installation</a>
+      <a href="#verifier">Vérifier un téléchargement</a>
+      <a href="#premier-demarrage">Premier démarrage</a>
+      <a href="#reseau">Réseau et HTTPS</a>
+      <p>Administration</p>
+      <a href="#configuration">Configuration</a>
+      <a href="#commandes">Commandes</a>
+      <a href="#utilisateurs">Utilisateurs et droits</a>
+      <a href="#cible-ssh">Cible SSH</a>
+      <a href="#cible-vnc">Cible VNC</a>
+      <a href="#cible-rdp">Cible RDP</a>
+      <a href="#liaisons">Liaisons avec Völund et Andvari</a>
+      <p>Utilisation</p>
+      <a href="#machines">Machines et favoris</a>
+      <a href="#utilisation">Sessions et onglets</a>
+      <a href="#mosaique">Mosaïque</a>
+      <a href="#synchro">Saisie synchronisée</a>
+      <a href="#commandes-bib">Bibliothèque de commandes</a>
+      <a href="#espaces">Espaces de travail</a>
+      <a href="#fichiers">Transfert de fichiers</a>
+      <a href="#outils-bureau">Outils des bureaux</a>
+      <a href="#enregistrements">Enregistrements</a>
+      <a href="#sudo">Mot de passe sudo</a>
+      <a href="#jetons">Jetons d'accès et liens directs</a>
+      <a href="#themes">Thèmes</a>
+      <p>Application</p>
+      <a href="#application">Application Gná</a>
+      <a href="#installer-app">Installer l'application</a>
+      <a href="#compiler-app">Compiler l'application</a>
+      <p>Référence</p>
+      <a href="#bonnes-pratiques">Bonnes pratiques de sécurité</a>
+      <a href="#mise-a-jour">Mise à jour</a>
+      <a href="#api">API</a>
+      <a href="#choix-techniques">Choix techniques</a>
+      <a href="#licence">Licence</a>
+    </nav>
+  </details>
+
+  <article class="doc">
+
+    <header class="doc-head">
+      <p class="eyebrow">Documentation · <span data-version>v0.15.1</span></p>
+      <h1>Documentation de Gná</h1>
+      <p class="lead">Installer, configurer et utiliser le bastion d'accès SSH, RDP et VNC.</p>
+    </header>
+
+    <!-- ================= DÉMARRER ================= -->
+    <section id="presentation">
+      <h2>Présentation <a class="anchor" href="#presentation">#</a></h2>
+      <p>Gná est un bastion d'accès multi-protocole. Les utilisateurs ouvrent leurs <strong>terminaux SSH</strong> et leurs <strong>bureaux RDP et VNC</strong> depuis le navigateur ou depuis l'application Gná (Windows, Linux, Android). Ils ne se connectent jamais directement aux machines.</p>
+      <ul>
+        <li>Le navigateur ne parle qu'à Gná. C'est Gná qui ouvre les connexions vers les cibles et relaie le flux par WebSocket.</li>
+        <li>Les identifiants des cibles (mots de passe, clés privées) sont chiffrés en base et ne sont jamais envoyés au navigateur.</li>
+        <li>Chaque accès passe par une MFA, est contrôlé par des droits, inscrit dans un journal d'audit et, par défaut, enregistré.</li>
+      </ul>
+      <p>Gná tourne en natif : un binaire, un service systemd durci, un utilisateur système dédié et PostgreSQL en local. Aucun conteneur.</p>
+    </section>
+
+    <section id="installation">
+      <h2>Installation <a class="anchor" href="#installation">#</a></h2>
+      <p>Serveur : Debian 12+ ou Ubuntu 22.04+ (x86-64). Fichiers d'installation : page <a href="index.html#telecharger">Télécharger</a>.</p>
+
+      <h3>Avec le paquet .deb <span class="badge">recommandé</span></h3>
+      <div class="code">
+        <button class="copy" type="button" data-copy="sudo apt install ./gna-server_0.15.1_amd64.deb&#10;sudo -u gna gna user add admin --admin">Copier</button>
+<pre><code><span class="c"># installe aussi PostgreSQL si besoin</span>
+sudo apt install ./gna-server_0.15.1_amd64.deb
+sudo -u gna gna user add admin --admin</code></pre>
+      </div>
+      <p>Le fichier <code>gna-server_…</code> installe le paquet <code>gna</code>. Il crée l'utilisateur <code>gna</code>, la base et le service, puis démarre le service. Il crée aussi <code>/etc/gna/gna.env</code>, avec une clé maître neuve générée une seule fois. Une installation faite auparavant avec <code>install.sh</code> est reprise automatiquement.</p>
+      <p>Pour construire le paquet vous-même (Go 1.23+, <code>make</code>, <code>dpkg-deb</code>) : <code>make deb</code>. Le fichier est créé dans <code>clients/installateurs/</code>, sous le nom <code>gna-server_&lt;version&gt;_amd64.deb</code>.</p>
+
+      <h3>Depuis les sources</h3>
+      <div class="code">
+        <button class="copy" type="button" data-copy="make build&#10;sudo ./packaging/install.sh&#10;sudo -u gna gna user add admin --admin">Copier</button>
+<pre><code><span class="c"># tests, puis compile dist/linux/gna et dist/linux/gna-rdp</span>
+make build
+<span class="c"># PostgreSQL si besoin, utilisateur gna, base, config, service</span>
+sudo ./packaging/install.sh
+sudo -u gna gna user add admin --admin</code></pre>
+      </div>
+      <p><code>make build</code> compile la passerelle RDP si Rust ≥ 1.89 est installé (rustup). Sinon, il utilise le binaire précompilé fourni dans <code>packaging/prebuilt/</code>. <code>install.sh</code> peut être relancé sans risque : il ne touche ni à une configuration ni à une base existantes.</p>
+
+      <h3>Ce qui est installé</h3>
+      <table>
+        <thead><tr><th>Élément</th><th>Emplacement</th></tr></thead>
+        <tbody>
+          <tr><td>Binaires</td><td><code>/usr/bin/gna</code> et <code>/usr/bin/gna-rdp</code> (paquet), ou <code>/usr/local/bin/</code> (<code>install.sh</code>)</td></tr>
+          <tr><td>Configuration</td><td><code>/etc/gna/gna.env</code>, droits <code>root:gna 640</code>. Contient la clé maître.</td></tr>
+          <tr><td>Service</td><td><code>gna.service</code> : utilisateur <code>gna</code>, sans privilèges, système en lecture seule</td></tr>
+          <tr><td>Certificat HTTPS</td><td><code>/var/lib/gna/tls/</code>, créé au premier démarrage</td></tr>
+          <tr><td>Enregistrements</td><td><code>/var/lib/gna/recordings</code> (chiffrés)</td></tr>
+          <tr><td>Base</td><td>PostgreSQL local, base <code>gna</code>, socket Unix sans mot de passe (authentification <em>peer</em>)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-warn">
+        <strong>Sauvegardez la clé maître à part.</strong>
+        <code>GNA_MASTER_KEY</code> chiffre les secrets des cibles, les secrets TOTP et les enregistrements. Sans elle, ils sont perdus.
+      </div>
+    </section>
+
+    <section id="verifier">
+      <h2>Vérifier un téléchargement <a class="anchor" href="#verifier">#</a></h2>
+      <p>Avant d'installer un paquet, vérifiez qu'il n'a pas été altéré. Téléchargez <a href="telechargements/SHA256SUMS" download><code>SHA256SUMS</code></a> dans le même dossier que les paquets, puis :</p>
+      <div class="code">
+        <button class="copy" type="button" data-copy="sha256sum -c --ignore-missing SHA256SUMS">Copier</button>
+<pre><code>sha256sum -c --ignore-missing SHA256SUMS
+<span class="c"># attendu : gna-server_0.15.1_amd64.deb: OK</span></code></pre>
+      </div>
+      <table>
+        <thead><tr><th>Fichier</th><th>SHA-256</th></tr></thead>
+        <tbody>
+          <!-- empreintes:debut -->
+          <tr><td><code>gna-server_0.15.1_amd64.deb</code></td><td><code>ff399dd2ea653483ecb7b0d1da3d430d3bb6cf9ea18437b7af7c18d4002bd15f</code></td></tr>
+          <tr><td><code>Gna-0.13.0-windows-setup.exe</code></td><td><code>4a56b5618873dd7815e7d4abbc761d96c0fe318a1594ae0a3a79f4f76f94184d</code></td></tr>
+          <tr><td><code>Gna-0.13.0-android.apk</code></td><td><code>0ab1abf5ee5b0d9a87c9ba416f6d6aa0cf281e5f8648ca85c31d0ff1e6f2cf32</code></td></tr>
+          <tr><td><code>gna-app_0.14.0_amd64.deb</code></td><td><code>18a1e1264b89f5dc9ce25b39cb48a77af611f772fb037c38fea4691b91796750</code></td></tr>
+          <tr><td><code>Gna-0.13.0-x86_64.AppImage</code></td><td><code>8f1571c41d0e6a1046cb140075ffc50d74b330e2382013c07a67b0307bacb076</code></td></tr>
+          <!-- empreintes:fin -->
+        </tbody>
+      </table>
+      <div class="callout callout-warn">
+        <strong>Une empreinte ne protège que si elle vient d'une autre source que le fichier.</strong>
+        Comparez-la avec celle publiée ici, sur une page servie en HTTPS, ou transmise par un autre canal.
+      </div>
+      <h3>Signature de l'application Android</h3>
+      <p>L'APK est signé par son auteur. Les mises à jour ne s'installent par-dessus l'ancienne version que si elles portent la même signature. Pour la vérifier (outil <code>apksigner</code> du SDK Android) :</p>
+      <div class="code">
+<pre><code>apksigner verify --print-certs Gna-0.13.0-android.apk
+<span class="c"># attendu : Signer #1 certificate SHA-256 digest:</span>
+<span class="c"># 5bad08d255cf0c8e01d38846dfdd7301fb580325429636572e7f4fc6f4c7dd26</span></code></pre>
+      </div>
+    </section>
+
+    <section id="premier-demarrage">
+      <h2>Premier démarrage <a class="anchor" href="#premier-demarrage">#</a></h2>
+      <ol>
+        <li>Sur le serveur, notez l'empreinte du certificat : <code>sudo -u gna gna tls info</code>.</li>
+        <li>Ouvrez <code>https://&lt;ip-du-serveur&gt;:8443</code>. Le navigateur affiche un avertissement, car le certificat est auto-signé. Comparez l'empreinte avec celle notée, puis acceptez.</li>
+        <li>Connectez-vous avec le compte admin créé à l'installation.</li>
+        <li>Scannez le QR code avec une application TOTP (Aegis, 2FAS, Bitwarden, Google Authenticator…), puis saisissez le code pour confirmer.</li>
+      </ol>
+      <p>Commandes utiles :</p>
+      <div class="code">
+<pre><code>systemctl status gna
+journalctl -u gna -f
+<span class="c"># après une modification de /etc/gna/gna.env</span>
+sudo systemctl restart gna</code></pre>
+      </div>
+    </section>
+
+    <section id="reseau">
+      <h2>Réseau et HTTPS <a class="anchor" href="#reseau">#</a></h2>
+      <p>Par défaut, Gná écoute sur toutes les interfaces (<code>0.0.0.0:8443</code>) <strong>en HTTPS uniquement</strong>. Le certificat auto-signé couvre le nom de la machine et ses adresses IP. Gná refuse d'écouter en HTTP en clair ailleurs que sur <code>127.0.0.1</code> : les mots de passe et les codes TOTP circuleraient en clair.</p>
+      <ul>
+        <li><strong>L'adresse IP du serveur a changé</strong> : <code>sudo -u gna gna tls regen &amp;&amp; sudo systemctl restart gna</code></li>
+        <li><strong>Vrai certificat</strong> (Let's Encrypt, PKI interne) : <code>GNA_TLS_SELF_SIGNED=false</code>, puis renseignez <code>GNA_TLS_CERT</code> et <code>GNA_TLS_KEY</code>. Les fichiers doivent être lisibles par l'utilisateur <code>gna</code>.</li>
+        <li><strong>Accès réservé à la machine elle-même</strong> : <code>GNA_LISTEN=127.0.0.1:8443</code></li>
+        <li><strong>Derrière un reverse proxy</strong> : Gná sur <code>127.0.0.1</code> et <code>GNA_TRUST_PROXY=true</code>, pour lire l'IP du client dans <code>X-Forwarded-For</code>.</li>
+      </ul>
+    </section>
+
+    <!-- ================= ADMINISTRATION ================= -->
+    <section id="configuration">
+      <h2>Configuration <a class="anchor" href="#configuration">#</a></h2>
+      <p>Gná lit <code>/etc/gna/gna.env</code>, ou le fichier indiqué par <code>GNA_CONFIG</code>. Les variables d'environnement ont priorité sur le fichier. <strong>Gná refuse de démarrer si ce fichier est lisible par tous les utilisateurs.</strong></p>
+
+      <h3>Général</h3>
+      <table>
+        <thead><tr><th>Variable</th><th>Défaut</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>GNA_DATABASE_URL</code></td><td><em>obligatoire</em></td><td>URL PostgreSQL</td></tr>
+          <tr><td><code>GNA_MASTER_KEY</code></td><td><em>obligatoire</em></td><td>Clé de chiffrement, 32 octets en base64</td></tr>
+          <tr><td><code>GNA_LISTEN</code></td><td><code>:8080</code></td><td>Adresse d'écoute (<code>0.0.0.0:8443</code> dans la config installée)</td></tr>
+          <tr><td><code>GNA_TLS_SELF_SIGNED</code></td><td><code>false</code></td><td>HTTPS avec certificat auto-signé (<code>true</code> dans la config installée)</td></tr>
+          <tr><td><code>GNA_TLS_CERT</code> / <code>GNA_TLS_KEY</code></td><td>—</td><td>HTTPS avec un certificat fourni (PEM)</td></tr>
+          <tr><td><code>GNA_DATA_DIR</code></td><td><code>/var/lib/gna</code></td><td>Données locales</td></tr>
+          <tr><td><code>GNA_ALLOW_PLAIN_HTTP</code></td><td><code>false</code></td><td>HTTP en clair hors localhost (déconseillé)</td></tr>
+          <tr><td><code>GNA_COOKIE_SECURE</code></td><td><code>true</code></td><td>Cookie réservé au HTTPS</td></tr>
+          <tr><td><code>GNA_TRUST_PROXY</code></td><td><code>false</code></td><td>Lire l'IP client dans <code>X-Forwarded-For</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Sessions et authentification</h3>
+      <table>
+        <thead><tr><th>Variable</th><th>Défaut</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>GNA_SESSION_TTL</code></td><td><code>12h</code></td><td>Durée maximale d'une session</td></tr>
+          <tr><td><code>GNA_IDLE_TIMEOUT</code></td><td><code>30m</code></td><td>Déconnexion après inactivité</td></tr>
+          <tr><td><code>GNA_MAX_FAILURES</code></td><td><code>5</code></td><td>Échecs avant verrouillage du compte</td></tr>
+          <tr><td><code>GNA_LOCK_DURATION</code></td><td><code>15m</code></td><td>Durée du verrouillage</td></tr>
+          <tr><td><code>GNA_ISSUER</code></td><td><code>Gná</code></td><td>Nom affiché dans l'application TOTP</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Enregistrement</h3>
+      <table>
+        <thead><tr><th>Variable</th><th>Défaut</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>GNA_RECORD_SESSIONS</code></td><td><code>true</code></td><td>Enregistrer les sessions SSH</td></tr>
+          <tr><td><code>GNA_RECORD_VNC</code></td><td>= <code>GNA_RECORD_SESSIONS</code></td><td>Enregistrer les sessions VNC et RDP</td></tr>
+          <tr><td><code>GNA_RECORD_INPUT</code></td><td><code>false</code></td><td>Enregistrer aussi les frappes clavier (inclut les mots de passe tapés)</td></tr>
+          <tr><td><code>GNA_RECORDING_RETENTION_DAYS</code></td><td><code>90</code></td><td>Durée de conservation (0 = illimitée)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Bureaux à distance</h3>
+      <table>
+        <thead><tr><th>Variable</th><th>Défaut</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>GNA_RDP_BRIDGE</code></td><td>à côté de <code>gna</code>, puis <code>/usr/local/bin/gna-rdp</code></td><td>Chemin de la passerelle RDP</td></tr>
+          <tr><td><code>GNA_CLIPBOARD</code></td><td><code>true</code></td><td>Copier-coller dans les bureaux à distance</td></tr>
+          <tr><td><code>GNA_FILE_TRANSFER</code></td><td><code>true</code></td><td>Transfert de fichiers (SFTP et lecteur RDP « Gna »)</td></tr>
+          <tr><td><code>GNA_TRANSFER_MAX_MB</code></td><td><code>1024</code></td><td>Taille maximale du dossier de transfert d'une session RDP</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="commandes">
+      <h2>Commandes <a class="anchor" href="#commandes">#</a></h2>
+      <p>Les commandes d'administration se lancent sous l'utilisateur <code>gna</code>, pour pouvoir lire la configuration : <code>sudo -u gna gna user list</code>.</p>
+      <table>
+        <thead><tr><th>Commande</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr><td><code>gna serve</code></td><td>Démarre le serveur (applique les migrations)</td></tr>
+          <tr><td><code>gna migrate</code></td><td>Applique les migrations seules</td></tr>
+          <tr><td><code>gna version</code></td><td>Affiche la version installée</td></tr>
+          <tr><td><code>gna keygen</code></td><td>Génère une clé maître</td></tr>
+          <tr><td><code>gna tls info</code></td><td>Empreinte, noms couverts et expiration du certificat</td></tr>
+          <tr><td><code>gna tls regen</code></td><td>Régénère le certificat auto-signé</td></tr>
+          <tr><td><code>gna user add &lt;nom&gt; [--admin]</code></td><td>Crée un utilisateur</td></tr>
+          <tr><td><code>gna user list</code></td><td>Liste les utilisateurs (admin, MFA, état)</td></tr>
+          <tr><td><code>gna user passwd &lt;nom&gt;</code></td><td>Change le mot de passe et ferme ses sessions</td></tr>
+          <tr><td><code>gna user reset-mfa &lt;nom&gt;</code></td><td>Réinitialise la MFA (téléphone perdu)</td></tr>
+          <tr><td><code>gna user disable</code> / <code>enable &lt;nom&gt;</code></td><td>Désactive ou réactive un compte</td></tr>
+          <tr><td><code>gna user unlock &lt;nom&gt;</code></td><td>Lève un verrouillage</td></tr>
+        </tbody>
+      </table>
+      <p>Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : <code>echo "…" | sudo -u gna gna user add bob</code>.</p>
+    </section>
+
+    <section id="utilisateurs">
+      <h2>Utilisateurs et droits <a class="anchor" href="#utilisateurs">#</a></h2>
+      <ul>
+        <li><strong>Paramètres › Utilisateurs</strong> : création avec mot de passe initial. Chaque utilisateur s'ouvre sur une fiche avec ses actions : droits admin, désactivation, déverrouillage, nouveau mot de passe, réinitialisation de la MFA, suppression.</li>
+        <li><strong>Paramètres › Groupes</strong> d'utilisateurs, et <strong>accès aux cibles</strong> accordé par groupe ou par utilisateur, dans la section « Accès » de chaque cible. Une machine ou un groupe se supprime depuis sa fenêtre de modification.</li>
+        <li>Les administrateurs ont accès à tout. Un utilisateur ne voit que ses cibles : une cible non attribuée répond « introuvable ».</li>
+        <li><strong>Retrait immédiat</strong> : si l'accès est retiré ou le compte désactivé, un terminal ou un bureau ouvert se ferme dans les 30 secondes.</li>
+        <li><strong>Paramètres › Compte</strong> : chacun change son mot de passe. Les sessions ouvertes sur ses autres appareils sont alors fermées.</li>
+        <li><strong>Garde-fous</strong> : un admin ne peut ni se rétrograder, ni se désactiver, ni se supprimer. Il reste toujours au moins un admin actif.</li>
+      </ul>
+    </section>
+
+    <section id="cible-ssh">
+      <h2>Ajouter une cible SSH <a class="anchor" href="#cible-ssh">#</a></h2>
+      <ol>
+        <li>Onglet <strong>Cibles</strong> → <strong>Ajouter une cible</strong> (compte admin).</li>
+        <li>Renseignez l'adresse, le port et l'identifiant, puis le mot de passe ou la clé privée.</li>
+        <li>Cliquez sur <strong>Récupérer l'empreinte</strong>, et comparez-la avec celle de la cible : <code>ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</code></li>
+        <li>Enregistrez, puis <strong>Ouvrir le terminal</strong>.</li>
+      </ol>
+      <p>Si la clé d'hôte change plus tard, la connexion est bloquée (protection contre l'interception). Si le changement est légitime (réinstallation de la cible), modifiez la cible et récupérez à nouveau l'empreinte.</p>
+    </section>
+
+    <section id="cible-vnc">
+      <h2>Ajouter une cible VNC <a class="anchor" href="#cible-vnc">#</a></h2>
+      <p>Exemple sur une cible Debian avec XFCE et TigerVNC :</p>
+      <div class="code">
+<pre><code>sudo apt install tigervnc-standalone-server dbus-x11
+<span class="c"># 8 caractères max ; « n » pour le mot de passe view-only</span>
+vncpasswd
+printf '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nexec dbus-launch --exit-with-session startxfce4\n' &gt; ~/.config/tigervnc/xstartup
+chmod +x ~/.config/tigervnc/xstartup
+<span class="c"># écran :1 = port 5901</span>
+tigervncserver -xstartup ~/.config/tigervnc/xstartup -localhost no :1</code></pre>
+      </div>
+      <p>Dans Gná : <strong>Ajouter une cible</strong> → protocole <strong>VNC</strong>, adresse, port (5901 pour l'écran <code>:1</code>), mot de passe VNC. Gná s'authentifie lui-même auprès de la cible : le mot de passe ne quitte jamais le serveur.</p>
+      <div class="callout callout-warn">
+        <strong>Le protocole VNC ne chiffre pas le flux.</strong>
+        Limitez le port VNC de la cible à l'IP de Gná (pare-feu), ou gardez-le sur un réseau de confiance.
+      </div>
+    </section>
+
+    <section id="cible-rdp">
+      <h2>Ajouter une cible RDP <a class="anchor" href="#cible-rdp">#</a></h2>
+      <p>Gná lance la passerelle <code>gna-rdp</code> (fondée sur IronRDP), qui convertit l'écran RDP en flux VNC. Les identifiants lui sont transmis par un tube : le navigateur ne les voit jamais. Gná gère l'authentification NLA (exigée par Windows par défaut) et le TLS seul (xrdp).</p>
+
+      <h3>Cible Windows</h3>
+      <ol>
+        <li>Activez le Bureau à distance : <em>Paramètres → Système → Bureau à distance</em>.</li>
+        <li>Autorisez le compte, et n'ouvrez le port 3389 qu'au serveur Gná.</li>
+        <li>Pour comparer l'empreinte du certificat, lancez dans PowerShell en administrateur :</li>
+      </ol>
+      <div class="code">
+<pre><code>$c=(Get-ChildItem 'Cert:\LocalMachine\Remote Desktop')[0]
+[BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($c.RawData)) -replace '-',':'</code></pre>
+      </div>
+
+      <h3>Cible Linux avec xrdp</h3>
+      <div class="code">
+<pre><code>sudo apt install xrdp
+<span class="c"># empreinte du certificat</span>
+openssl x509 -in /etc/xrdp/cert.pem -noout -fingerprint -sha256</code></pre>
+      </div>
+      <p>Choisissez le clavier « Français (Linux / xrdp) ». Gná est compatible avec xrdp 0.10 (Debian 13). Pour le lecteur partagé, l'utilisateur doit pouvoir utiliser FUSE, ce qui est le cas par défaut.</p>
+
+      <h3>Dans Gná</h3>
+      <ul>
+        <li>Protocole <strong>RDP</strong>, adresse, port 3389, identifiants, puis <strong>Récupérer l'empreinte</strong>. Si le certificat change ensuite, la connexion est bloquée.</li>
+        <li><strong>Disposition du clavier</strong> : Français Windows, Français Linux/xrdp ou Anglais US. Les touches mortes (ê, ë, ñ…) sont gérées.</li>
+        <li>Limite : pas de son.</li>
+      </ul>
+    </section>
+
+    <section id="liaisons">
+      <h2>Liaisons avec Völund et Andvari <a class="anchor" href="#liaisons">#</a></h2>
+      <p>Les autres outils de la famille peuvent écrire dans Gná, chacun avec un jeton de service limité à ce dont il a besoin. Seuls les administrateurs créent des liaisons, dans <strong>Paramètres › Liaisons</strong> › <strong>Nouvelle liaison</strong>.</p>
+      <table>
+        <thead><tr><th>Droit accordé</th><th>Pour</th><th>Ce que l'outil peut faire</th></tr></thead>
+        <tbody>
+          <tr><td>Ajouter et mettre à jour des machines SSH</td><td>Völund</td><td>À la fin de chaque installation, ajouter la machine avec son adresse, son port et sa clé d'hôte SSH, lue pendant l'installation. Une réinstallation met à jour la même machine. Le nom, les identifiants et les droits réglés dans Gná ne sont jamais modifiés, et la liaison ne peut rien supprimer.</td></tr>
+          <tr><td>Recevoir des mots de passe</td><td>Andvari</td><td>Envoyer le mot de passe d'une machine, chiffré pour Gná seul : le serveur Andvari, qui le transmet, ne peut pas le lire. Il devient le <a href="#sudo">mot de passe sudo</a> de la machine, et son identifiant de connexion si elle était « à compléter ».</td></tr>
+        </tbody>
+      </table>
+      <ol>
+        <li>Dans Gná, créez la liaison et cochez le droit voulu. Gná affiche un <strong>code d'appairage</strong> (<code>runa1.…</code>) : il contient l'adresse de Gná, l'empreinte de son certificat et le jeton.</li>
+        <li>Collez ce code dans l'autre outil, <strong>Paramètres › Liaisons</strong>, dans les 15 minutes. Passé ce délai, la liaison inutilisée disparaît d'elle-même.</li>
+        <li>L'outil lié vérifie le certificat de Gná avec l'empreinte du code : un serveur intermédiaire ne peut pas se faire passer pour Gná.</li>
+      </ol>
+      <ul>
+        <li>Une machine ajoutée par Völund n'a pas encore d'identifiants : elle porte le badge <strong>à compléter</strong> jusqu'à ce qu'Andvari envoie son mot de passe, ou que vous les saisissiez.</li>
+        <li>Le code d'appairage n'est affiché qu'une fois. Gná ne garde que l'empreinte du jeton.</li>
+        <li>Chaque usage d'une liaison est journalisé. Révoquer une liaison n'efface pas les machines déjà ajoutées.</li>
+      </ul>
+    </section>
+
+    <!-- ================= UTILISATION ================= -->
+    <section id="machines">
+      <h2>Machines, dossiers et favoris <a class="anchor" href="#machines">#</a></h2>
+      <ul>
+        <li><strong>Dossiers</strong> : dans le formulaire d'une cible, choisissez le dossier dans la liste déroulante des dossiers existants, ou « Nouveau dossier… ».</li>
+        <li>La liste des machines est <strong>groupée par dossier</strong>. Les groupes sont repliables et leur état est mémorisé.</li>
+        <li><strong>Recherche</strong> par nom, adresse, dossier ou description.</li>
+        <li><strong>Favoris</strong> : l'étoile d'une carte place la machine dans le groupe « ★ Favoris », en tête de liste. Les favoris sont propres à chaque utilisateur.</li>
+      </ul>
+      <p class="muted small">Depuis la v0.12.0, les anciennes étiquettes sont fusionnées dans les dossiers : une machine sans dossier a pris sa première étiquette.</p>
+    </section>
+
+    <section id="utilisation">
+      <h2>Sessions et onglets <a class="anchor" href="#utilisation">#</a></h2>
+      <ul>
+        <li>Plusieurs sessions <strong>SSH, VNC et RDP</strong> peuvent être ouvertes en même temps, chacune dans son onglet. La même machine peut être ouverte plusieurs fois (« serveur 2 »).</li>
+        <li>Les onglets en arrière-plan <strong>restent connectés</strong> : le terminal continue de recevoir, le bureau garde sa taille.</li>
+        <li><strong>Machines</strong> ramène à la liste pour ouvrir une autre session sans fermer les autres. Depuis la liste, <strong>Sessions ouvertes</strong> ramène aux onglets.</li>
+        <li>Chaque onglet a sa barre d'outils et ses panneaux (Fichiers, touches), avec son propre dossier SFTP.</li>
+        <li>Un point de couleur indique l'état (connexion, connecté, déconnecté), et un <span class="t-rec">●</span> rouge que la session est enregistrée. <strong>✕</strong> ferme un onglet ; la déconnexion de Gná ferme tout.</li>
+      </ul>
+    </section>
+
+    <section id="mosaique">
+      <h2>Mosaïque <a class="anchor" href="#mosaique">#</a></h2>
+      <p>Dès 2 sessions, le bouton <strong>Mosaïque</strong> de la barre des sessions affiche toutes les sessions ouvertes en même temps, en grille (2, 4, 9… volets).</p>
+      <ul>
+        <li>Un clic sur un volet en fait la session active (barre d'outils, panneaux).</li>
+        <li>Les bureaux VNC et RDP sont mis à l'échelle sans changer leur résolution. Ils la retrouvent en revenant aux onglets.</li>
+        <li>Le choix est mémorisé dans le navigateur.</li>
+        <li>En mosaïque, les boutons <strong>Fichiers</strong> et le glisser-déposer sont désactivés, pour ne jamais envoyer un fichier vers la mauvaise machine.</li>
+      </ul>
+    </section>
+
+    <section id="synchro">
+      <h2>Saisie synchronisée <a class="anchor" href="#synchro">#</a></h2>
+      <p>Dès 2 terminaux SSH, tout ce qui est tapé ou collé dans un terminal part dans tous les terminaux cochés <strong>synchro</strong>. C'est pratique pour lancer la même commande sur plusieurs serveurs.</p>
+      <ul>
+        <li>Les terminaux concernés ont une <span class="t-sync">bordure orange</span>, et le bouton affiche « Synchro active (n) ».</li>
+        <li>Chaque session reste enregistrée et journalisée séparément.</li>
+      </ul>
+    </section>
+
+    <section id="commandes-bib">
+      <h2>Bibliothèque de commandes <a class="anchor" href="#commandes-bib">#</a></h2>
+      <p>Le menu <strong>Commandes</strong> d'un terminal SSH regroupe vos commandes enregistrées. Chaque utilisateur a sa propre bibliothèque.</p>
+      <ul>
+        <li>Un clic envoie la commande dans le terminal actif, ou dans <strong>tous les terminaux synchronisés</strong> si la saisie synchronisée est active. Le menu indique ce cas.</li>
+        <li>L'option <strong>exécuter directement</strong> ajoute Entrée. Les commandes sur plusieurs lignes sont validées ligne par ligne.</li>
+        <li>L'ajout, la modification et la suppression se font depuis ce même menu.</li>
+      </ul>
+    </section>
+
+    <section id="espaces">
+      <h2>Espaces de travail <a class="anchor" href="#espaces">#</a></h2>
+      <p>Un espace de travail est un ensemble de machines qui se rouvre d'un clic, avec sa disposition (onglets ou mosaïque) et sa saisie synchronisée.</p>
+      <ul>
+        <li><strong>Nouvel espace de travail</strong> ou <strong>Modifier</strong> : choisissez le nom, les machines, la disposition et la synchro, sans ouvrir de connexion.</li>
+        <li><strong>Enregistrer l'espace</strong>, dans l'écran des sessions, enregistre les sessions ouvertes telles quelles.</li>
+      </ul>
+    </section>
+
+    <section id="fichiers">
+      <h2>Transfert de fichiers <a class="anchor" href="#fichiers">#</a></h2>
+      <h3>SSH (SFTP)</h3>
+      <p>Le bouton <strong>Fichiers</strong> du terminal permet de parcourir les dossiers de la cible, d'envoyer un fichier (bouton ou glisser-déposer sur le terminal), de télécharger et de créer un dossier. Tout passe par la connexion SSH du terminal, avec les droits du compte de la cible. Rien n'est stocké sur le serveur Gná.</p>
+      <h3>RDP (lecteur partagé)</h3>
+      <p>Un lecteur partagé <strong>« Gna »</strong> apparaît sur la machine distante : <em>Ce PC → Gna sur GNA</em> sous Windows, <code>~/thinclient_drives/Gna</code> avec xrdp. Depuis le panneau Fichiers, vous pouvez envoyer un fichier (bouton ou glisser-déposer sur le bureau) et télécharger ce que la machine distante y dépose.</p>
+      <ul>
+        <li>Un dossier par session, supprimé à la fin, de taille plafonnée (<code>GNA_TRANSFER_MAX_MB</code>).</li>
+        <li>Le lecteur n'expose que le dossier de la session. Les chemins <code>..</code>, les liens symboliques et les flux NTFS sont refusés. Les fichiers téléchargés sont servis en pièce jointe.</li>
+      </ul>
+      <p>Tous les transferts sont journalisés (<code>file.upload</code>, <code>file.download</code>, <code>file.mkdir</code>). <code>GNA_FILE_TRANSFER=false</code> les désactive pour tout le monde.</p>
+    </section>
+
+    <section id="outils-bureau">
+      <h2>Outils des bureaux à distance <a class="anchor" href="#outils-bureau">#</a></h2>
+      <ul>
+        <li><strong>Copier-coller</strong> dans les deux sens, en UTF-8 (accents, €, emoji…). <kbd>Ctrl</kbd>+<kbd>V</kbd> ou <kbd>Maj</kbd>+<kbd>Inser</kbd> sur le bureau distant colle le presse-papiers du poste, sans autorisation à donner. En VNC, cela dépend du serveur VNC.</li>
+        <li><strong>Redimensionnement automatique</strong> : le bureau prend la taille de la fenêtre, sans reconnexion (RDP : Windows 8.1 et plus récent, xrdp 0.10 ; VNC : TigerVNC et la plupart des serveurs récents). Sinon, l'image est mise à l'échelle.</li>
+        <li><strong>Touches</strong> : <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Suppr</kbd>, touche Windows, <kbd>Alt</kbd>+<kbd>Tab</kbd>, <kbd>Ctrl</kbd>+<kbd>Échap</kbd>, <kbd>Windows</kbd>+<kbd>L</kbd>, <kbd>Impr. écran</kbd>.</li>
+        <li><strong>Plein écran</strong> et <strong>reconnexion</strong>.</li>
+      </ul>
+      <p><code>GNA_CLIPBOARD=false</code> désactive le copier-coller pour tout le monde.</p>
+    </section>
+
+    <section id="enregistrements">
+      <h2>Enregistrements <a class="anchor" href="#enregistrements">#</a></h2>
+      <ul>
+        <li><strong>SSH</strong> : tout ce qui s'affiche est enregistré et horodaté, au format asciicast. L'utilisateur voit un indicateur <strong>REC</strong>.</li>
+        <li><strong>VNC et RDP</strong> : le flux d'écran est enregistré, de quelques Mo à quelques dizaines de Mo par heure selon l'activité.</li>
+        <li><strong>Chiffrement</strong> : AES-256-GCM par blocs, avec la clé maître. Un bloc modifié, déplacé ou supprimé est détecté. Une session interrompue brutalement reste lisible jusqu'aux dernières secondes.</li>
+        <li><strong>Relecture</strong> (admins, onglet Sessions) : lecture, pause, vitesse de ×1 à ×16, déplacement dans le temps, export <code>.cast</code>. Pour VNC et RDP, l'option « Sauter les inactivités » raccourcit les moments où l'écran ne bouge pas.</li>
+        <li><strong>Recherche</strong> d'un texte affiché, dans toutes les sessions SSH récentes ou dans une seule. Un clic sur un résultat saute au moment correspondant.</li>
+        <li>Les <strong>frappes clavier ne sont pas enregistrées</strong> par défaut, car elles contiendraient les mots de passe tapés (<code>sudo</code>…).</li>
+        <li>Conservation de 90 jours par défaut, puis suppression automatique, tracée dans le journal. Chaque relecture et chaque recherche est aussi tracée.</li>
+      </ul>
+      <div class="callout">
+        <strong>Pas d'enregistrement, pas d'accès.</strong>
+        Si l'enregistrement est activé mais impossible (disque plein…), la connexion est refusée plutôt que d'ouvrir un accès non tracé.
+      </div>
+    </section>
+
+    <section id="sudo">
+      <h2>Mot de passe sudo <a class="anchor" href="#sudo">#</a></h2>
+      <p>Quand Andvari a envoyé le mot de passe d'une machine (voir <a href="#liaisons">Liaisons</a>), le terminal SSH de cette machine affiche le bouton <strong>Mot de passe sudo</strong>. Lancez une commande <code>sudo</code>, puis cliquez sur le bouton à l'invite du mot de passe : c'est le serveur Gná qui le tape dans la session.</p>
+      <ul>
+        <li>Le mot de passe ne passe jamais par le navigateur.</li>
+        <li>Il n'entre pas dans l'enregistrement des frappes : un marqueur « mot de passe sudo saisi par Gná » est posé à la place.</li>
+        <li>Chaque usage est inscrit au journal d'audit (<code>ssh.sudo_password</code>).</li>
+        <li>Gná le garde chiffré par sa clé maître, comme les identifiants des machines.</li>
+      </ul>
+    </section>
+
+    <section id="jetons">
+      <h2>Jetons d'accès et liens directs <a class="anchor" href="#jetons">#</a></h2>
+      <h3>Jetons d'accès personnels</h3>
+      <p><strong>Paramètres › Jetons d'accès</strong> : donnez un nom au jeton (ex. « bureau gungnir »), puis <strong>Créer un jeton</strong>. Le jeton (<code>gna_…</code>) n'est affiché qu'une fois : rangez-le aussitôt dans un gestionnaire de secrets, comme Andvari. Gná n'en garde que l'empreinte SHA-256. La même page liste les jetons (création, dernière utilisation et adresse IP) et permet de les révoquer.</p>
+      <ul>
+        <li><strong>Lecture seule</strong> : un jeton n'est accepté que par <code>GET /api/targets</code> (les machines accessibles à son propriétaire) et <code>GET /api/me</code>. Il n'ouvre ni terminal, ni bureau, ni SFTP, et ne donne accès à aucune action d'administration.</li>
+        <li>Il cesse de fonctionner si le compte est désactivé ou supprimé.</li>
+        <li>Chaque usage est journalisé, et le débit est limité par adresse IP (30 par minute). 20 jetons au plus par utilisateur.</li>
+      </ul>
+      <div class="code">
+        <button class="copy" type="button" data-copy="curl -fsS -H &quot;Authorization: Bearer gna_…&quot; https://gna.lan:8443/api/targets">Copier</button>
+<pre><code>curl -fsS -H "Authorization: Bearer gna_…" https://gna.lan:8443/api/targets</code></pre>
+      </div>
+      <p>Avec le certificat auto-signé de Gná, ajoutez <code>--cacert</code> (fichier exporté depuis <code>/var/lib/gna/tls/</code>) ou <code>--pinnedpubkey</code>.</p>
+      <h3>Liens vers une machine</h3>
+      <table>
+        <thead><tr><th>Lien</th><th>Effet</th></tr></thead>
+        <tbody>
+          <tr><td><code>gna://machine/&lt;id&gt;</code></td><td>Ouvre l'application Gná, ou la fenêtre déjà ouverte, sur la session de la machine <code>&lt;id&gt;</code></td></tr>
+          <tr><td><code>https://&lt;serveur&gt;:8443/#/machines/&lt;id&gt;</code></td><td>La même chose dans le navigateur</td></tr>
+        </tbody>
+      </table>
+      <p>Sans session ouverte, l'écran de connexion s'affiche d'abord, puis la session de la machine s'ouvre. Sous Linux, le paquet <code>gna-app</code> associe le schéma <code>gna://</code> à l'application (<code>xdg-open gna://machine/42</code>). L'AppImage l'enregistre à son premier lancement, et l'installeur Windows le déclare dans le registre.</p>
+      <p>Exemple : un menu rofi qui ouvre une machine dans l'application.</p>
+      <div class="code">
+<pre><code>curl -fsS -H "Authorization: Bearer $(andvari get gna-jeton)" https://gna.lan:8443/api/targets \
+  | jq -r '.[] | "\(.id)\t\(.name)\t\(.protocol)\t\(.folder)"' \
+  | rofi -dmenu -p Gná | cut -f1 | xargs -r -I{} xdg-open "gna://machine/{}"</code></pre>
+      </div>
+    </section>
+
+    <section id="themes">
+      <h2>Thèmes <a class="anchor" href="#themes">#</a></h2>
+      <p>Dans <strong>Paramètres › Apparence</strong>, ou avec le bouton clair/sombre de la barre du haut. Gná partage ses thèmes avec Saga, Andvari et Völund : Gná (sombre, par défaut), Écume (clair), Fjord, Saga, Vélin, Nuit, Parchemin, Braise, Givre, ou Automatique (Gná ou Écume selon le réglage de l'ordinateur). Les anciens choix (Sombre, Clair, Nord, Dracula, Gruvbox, Solarized) sont convertis automatiquement.</p>
+      <ul>
+        <li>Le thème s'applique tout de suite, aux terminaux et aux bureaux à distance compris. Les couleurs ANSI sont adaptées à chaque thème.</li>
+        <li>Il est <strong>enregistré dans le compte</strong> : il suit l'utilisateur d'un navigateur ou d'un appareil à l'autre.</li>
+      </ul>
+    </section>
+
+    <!-- ================= APPLICATION ================= -->
+    <section id="application">
+      <h2>Application Gná <a class="anchor" href="#application">#</a></h2>
+      <p>L'application (Windows, Linux, Android) affiche l'interface de votre serveur Gná dans sa propre fenêtre, avec le <strong>certificat du serveur épinglé</strong>.</p>
+      <p>Les moteurs web intégrés aux applications refusent les certificats auto-signés. L'application démarre donc un <strong>relais local</strong> sur <code>127.0.0.1</code>, inaccessible depuis le réseau. La fenêtre charge l'interface à travers lui, et le relais transmet tout au serveur en HTTPS.</p>
+      <div class="relay">
+        <span>Fenêtre de l'app</span><i>HTTP local</i><span>Relais <code>127.0.0.1</code></span><i>HTTPS épinglé</i><span>Serveur Gná</span>
+      </div>
+      <ul>
+        <li><strong>Premier lancement</strong> : saisissez l'adresse du serveur (ex. <code>10.0.1.20</code>, port 8443 par défaut). Comparez l'empreinte affichée avec <code>sudo -u gna gna tls info</code>, puis validez.</li>
+        <li><strong>Lancements suivants</strong> : connexion directe au serveur mémorisé.</li>
+        <li><strong>Certificat modifié</strong> : la connexion est bloquée et les deux empreintes s'affichent. La nouvelle n'est acceptée qu'après confirmation explicite.</li>
+        <li>Le relais refuse toute requête qui ne vise pas exactement son adresse (protection contre le DNS rebinding). Les pages de Gná n'ont aucun accès aux fonctions de l'application.</li>
+      </ul>
+      <h3>Application Linux</h3>
+      <ul>
+        <li>Le paquet s'appelle <code>gna-app</code>, pour ne pas le confondre avec le paquet serveur <code>gna</code> : <code>sudo apt install ./gna-app_0.14.0_amd64.deb</code></li>
+        <li>Les fichiers téléchargés en SFTP et en RDP arrivent dans le dossier <strong>Téléchargements</strong>, sans écraser un fichier existant, avec un message de confirmation.</li>
+        <li>Le relais local utilise un port stable : les réglages de la page sont conservés d'un lancement à l'autre.</li>
+      </ul>
+    </section>
+
+    <section id="installer-app">
+      <h2>Installer l'application <a class="anchor" href="#installer-app">#</a></h2>
+      <p>Fichiers sur la page <a href="index.html#telecharger">Télécharger</a>. Pensez à <a href="#verifier">vérifier leur empreinte</a>.</p>
+      <table>
+        <thead><tr><th>Système</th><th>Fichier</th><th>Installation</th></tr></thead>
+        <tbody>
+          <tr><td>Windows 10 / 11</td><td><code>Gna-0.13.0-windows-setup.exe</code></td><td>Lancez l'installeur. Il s'installe pour l'utilisateur courant, sans droits administrateur.</td></tr>
+          <tr><td>Linux (Debian, Ubuntu)</td><td><code>gna-app_0.14.0_amd64.deb</code></td><td><code>sudo apt install ./gna-app_0.14.0_amd64.deb</code></td></tr>
+          <tr><td>Linux (autres)</td><td><code>Gna-0.13.0-x86_64.AppImage</code></td><td><code>chmod +x Gna-*.AppImage</code>, puis ouvrez le fichier.</td></tr>
+          <tr><td>Android 7+</td><td><code>Gna-0.13.0-android.apk</code></td><td>Ouvrez le fichier sur le téléphone et autorisez l'installation d'applications inconnues pour ce navigateur ou ce gestionnaire de fichiers.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-warn">
+        <strong>L'installeur Windows n'est pas signé.</strong>
+        Windows SmartScreen affiche un avertissement : cliquez sur « Informations complémentaires », puis « Exécuter quand même ». Vérifiez d'abord l'empreinte SHA-256 du fichier.
+      </div>
+      <ul>
+        <li><strong>Windows</strong> : WebView2 est installé automatiquement s'il manque, ce qui est rare sous Windows 10 et 11.</li>
+        <li><strong>Android</strong> : les fichiers téléchargés depuis Gná (SFTP, RDP) sont confiés au gestionnaire de téléchargements d'Android, dans le dossier « Download ».</li>
+        <li>Une fois l'application installée, désactivez de nouveau l'installation d'applications inconnues sur Android.</li>
+      </ul>
+    </section>
+
+    <section id="compiler-app">
+      <h2>Compiler l'application <a class="anchor" href="#compiler-app">#</a></h2>
+      <h3>Linux, sur la machine</h3>
+      <div class="code">
+<pre><code>sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
+<span class="c"># Rust : https://rustup.rs  —  Node.js 20+</span>
+cd clients/app
+npm ci
+npx tauri build --bundles deb,appimage</code></pre>
+      </div>
+      <p>Le résultat est dans <code>src-tauri/target/release/bundle/</code>.</p>
+
+      <h3>Windows, depuis Linux</h3>
+      <div class="code">
+<pre><code>sudo apt install mingw-w64 nsis
+rustup target add x86_64-pc-windows-gnu
+cd clients/app &amp;&amp; npm ci
+<span class="c"># BUILD_STD=1 si la cible ne peut pas être téléchargée</span>
+./scripts/build-windows.sh</code></pre>
+      </div>
+      <p>Résultat : <code>src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/Gná_&lt;version&gt;_x64-setup.exe</code>, un installeur en français, sans droits administrateur.</p>
+
+      <h3>Android, sur votre machine</h3>
+      <p>L'APK est compilé et signé en local. Il faut le JDK 17, le SDK Android en ligne de commande (<code>platform-tools</code>, <code>platforms;android-35</code>, <code>build-tools;35.0.0</code>, <code>ndk;27.0.12077973</code>) et les cibles Rust Android :</p>
+      <div class="code">
+<pre><code>rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+cd clients/app &amp;&amp; npm ci
+<span class="c"># le mot de passe de la clé est demandé</span>
+GNA_KEYSTORE=~/chemin/gna-android.jks ./scripts/build-android.sh</code></pre>
+      </div>
+      <div class="callout callout-warn">
+        <strong>Conservez précieusement la clé <code>gna-android.jks</code>.</strong>
+        Sans elle, impossible de publier une mise à jour qui s'installe par-dessus l'ancienne version.
+      </div>
+      <p>Le script <code>scripts/android-patch.sh</code>, lancé automatiquement, n'autorise le HTTP en clair que vers <code>127.0.0.1</code>.</p>
+
+      <h3>Publication (GitHub Actions)</h3>
+      <p>Le workflow <code>.github/workflows/release.yml</code> compile le serveur et les applications Linux et Windows, puis publie une Release avec leurs fichiers. L'APK Android y est ajouté ensuite.</p>
+      <div class="code">
+<pre><code><span class="c"># après avoir mis à jour VERSION, clients/app/package.json et clients/app/src-tauri/tauri.conf.json</span>
+git tag v&lt;version&gt; &amp;&amp; git push origin v&lt;version&gt;
+gh release upload v&lt;version&gt; Gna-&lt;version&gt;-android.apk</code></pre>
+      </div>
+      <p>Lancé à la main sans étiquette (Actions → <strong>Publication</strong> → <strong>Run workflow</strong>), le workflow dépose les fichiers dans les <strong>Artifacts</strong> de l'exécution.</p>
+    </section>
+
+    <!-- ================= RÉFÉRENCE ================= -->
+    <section id="bonnes-pratiques">
+      <h2>Bonnes pratiques de sécurité <a class="anchor" href="#bonnes-pratiques">#</a></h2>
+      <p>Gná est prudent par défaut, mais la sécurité d'un bastion dépend aussi de son déploiement. Voici la checklist à suivre en production.</p>
+
+      <h3>Installation et mises à jour</h3>
+      <ul>
+        <li><a href="#verifier">Vérifiez l'empreinte SHA-256</a> de chaque paquet avant de l'installer.</li>
+        <li>Installez les nouvelles versions de Gná dès leur sortie (voir <a href="#mise-a-jour">Mise à jour</a>), et gardez le système du serveur à jour (<code>apt upgrade</code>).</li>
+        <li>Réservez le serveur à Gná : un bastion ne doit pas héberger d'autres services exposés.</li>
+      </ul>
+
+      <h3>Réseau</h3>
+      <ul>
+        <li>Toujours en <strong>HTTPS</strong> : certificat auto-signé vérifié par son empreinte, vrai certificat ou reverse proxy local. Ne mettez jamais <code>GNA_ALLOW_PLAIN_HTTP=true</code>.</li>
+        <li>N'ouvrez le port 8443 qu'aux réseaux qui en ont besoin (pare-feu, VPN).</li>
+        <li><strong>Limitez les ports des cibles</strong> (22, 3389, 5901…) à l'adresse IP de Gná : le bastion doit être le seul passage.</li>
+        <li>Le flux VNC n'est pas chiffré entre Gná et la cible : gardez-le sur un réseau de confiance.</li>
+        <li>N'exposez pas PostgreSQL : par défaut, il n'écoute que sur la machine.</li>
+      </ul>
+
+      <h3>Secrets et sauvegardes</h3>
+      <ul>
+        <li>Laissez <code>/etc/gna/gna.env</code> en <code>root:gna 640</code>. Gná refuse de démarrer s'il est lisible par tous.</li>
+        <li>Sauvegardez <strong>la base, <code>/var/lib/gna/recordings</code> et la clé maître séparément</strong>. Gardez la clé maître hors ligne : une sauvegarde qui contient à la fois les données et la clé donne accès à tous les secrets.</li>
+        <li>Testez la restauration de vos sauvegardes.</li>
+      </ul>
+
+      <h3>Comptes et droits</h3>
+      <ul>
+        <li>Un compte nominatif par personne, jamais de compte partagé : le journal d'audit doit dire qui a fait quoi.</li>
+        <li>Le moins de privilèges possible : peu d'administrateurs, et des accès aux cibles accordés par groupe, uniquement là où c'est nécessaire.</li>
+        <li>Sur les cibles, utilisez des comptes dédiés et préférez les clés SSH aux mots de passe.</li>
+        <li>Désactivez un compte dès le départ d'une personne (<code>gna user disable</code>) : ses sessions ouvertes se ferment dans les 30 secondes.</li>
+        <li>Téléphone perdu : <code>gna user reset-mfa</code>, puis nouvel enrôlement.</li>
+      </ul>
+
+      <h3>Empreintes</h3>
+      <ul>
+        <li>Comparez toujours les empreintes SSH, RDP et du certificat HTTPS avec celles relevées sur la machine elle-même, jamais avec celles qu'affiche le réseau.</li>
+        <li>Si Gná bloque une connexion pour cause d'empreinte modifiée, cherchez-en la raison avant de l'accepter.</li>
+      </ul>
+
+      <h3>Traçabilité</h3>
+      <ul>
+        <li>Laissez l'enregistrement activé (<code>GNA_RECORD_SESSIONS</code>, <code>GNA_RECORD_VNC</code>), et surveillez l'espace disque : un disque plein bloque les connexions.</li>
+        <li>Laissez <code>GNA_RECORD_INPUT=false</code>, sauf obligation : les frappes contiendraient les mots de passe tapés.</li>
+        <li>Choisissez une durée de conservation (<code>GNA_RECORDING_RETENTION_DAYS</code>) adaptée à vos obligations, notamment au RGPD : les enregistrements sont des données personnelles, et les utilisateurs doivent être informés.</li>
+        <li>Consultez régulièrement le journal d'audit : accès refusés, verrouillages, empreintes modifiées.</li>
+      </ul>
+
+      <h3>Réduire la surface d'attaque</h3>
+      <ul>
+        <li>Si vous n'en avez pas besoin, coupez le copier-coller (<code>GNA_CLIPBOARD=false</code>) et le transfert de fichiers (<code>GNA_FILE_TRANSFER=false</code>). Ce sont deux voies de sortie possibles pour des données.</li>
+        <li>Gardez des durées de session courtes (<code>GNA_SESSION_TTL</code>, <code>GNA_IDLE_TIMEOUT</code>).</li>
+      </ul>
+    </section>
+
+    <section id="mise-a-jour">
+      <h2>Mise à jour et désinstallation <a class="anchor" href="#mise-a-jour">#</a></h2>
+      <ul>
+        <li><strong>Avec le paquet</strong> : relancez <code>sudo apt install ./gna-server_&lt;version&gt;_amd64.deb</code> avec le nouveau fichier. La configuration et les données sont conservées, et le service redémarre.</li>
+        <li><strong>Depuis les sources</strong> : <code>make build &amp;&amp; sudo ./packaging/install.sh</code>, ou <code>make deb</code> puis installez le paquet de <code>clients/installateurs/</code>.</li>
+        <li><strong>Désinstallation</strong> : <code>sudo apt remove gna</code>. Les données restent ; <code>purge</code> indique comment tout effacer.</li>
+      </ul>
+    </section>
+
+    <section id="api">
+      <h2>API <a class="anchor" href="#api">#</a></h2>
+      <p>La colonne « Étape » indique l'état de session requis : <code>enroll</code> (MFA à enrôler), <code>mfa</code> (code TOTP attendu) ou <code>full</code> (connecté).</p>
+      <table>
+        <thead><tr><th>Méthode</th><th>Route</th><th>Étape</th></tr></thead>
+        <tbody>
+          <tr><td><code>POST</code></td><td><code>/api/auth/login</code></td><td>aucune</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/auth/totp/enroll</code></td><td><code>enroll</code></td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/auth/totp/enroll/confirm</code></td><td><code>enroll</code></td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/auth/totp/verify</code></td><td><code>mfa</code></td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/auth/logout</code></td><td>toute session</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/me</code></td><td>toute session, ou jeton d'accès</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/me/password</code></td><td><code>full</code></td></tr>
+          <tr><td><code>GET</code> / <code>POST</code></td><td><code>/api/me/tokens</code></td><td><code>full</code></td></tr>
+          <tr><td><code>DELETE</code></td><td><code>/api/me/tokens/{id}</code></td><td><code>full</code></td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/targets</code></td><td><code>full</code>, ou jeton d'accès</td></tr>
+          <tr><td><code>GET</code> (WS)</td><td><code>/api/targets/{id}/ssh?cols=&amp;rows=</code></td><td><code>full</code></td></tr>
+          <tr><td><code>GET</code> (WS)</td><td><code>/api/targets/{id}/vnc</code></td><td><code>full</code></td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/admin/targets</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>PUT</code> / <code>DELETE</code></td><td><code>/api/admin/targets/{id}</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/admin/targets/scan</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/admin/access-sessions</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/admin/audit?limit=100</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code> / <code>POST</code></td><td><code>/api/admin/users</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/admin/users/{id}/{promote,demote,disable,enable,unlock,reset-mfa,password,delete}</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code> / <code>POST</code></td><td><code>/api/admin/groups</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>PUT</code> / <code>DELETE</code></td><td><code>/api/admin/groups/{id}</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/admin/recordings/{session}/cast</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/admin/recordings/{session}/vnc</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/admin/recordings/{session}/search?q=</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/admin/recordings/search?q=&amp;days=</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code> / <code>POST</code></td><td><code>/api/admin/links</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>DELETE</code></td><td><code>/api/admin/links/{id}</code></td><td><code>full</code> + admin</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/link</code></td><td>jeton de liaison</td></tr>
+          <tr><td><code>PUT</code></td><td><code>/api/link/targets/{ref}</code></td><td>jeton de liaison, droit « machines »</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/link/secrets</code></td><td>jeton de liaison, droit « mots de passe »</td></tr>
+        </tbody>
+      </table>
+      <p class="muted small">Les routes de transfert de fichiers (SFTP et RDP) ne sont pas encore listées dans le README du projet.</p>
+    </section>
+
+    <section id="choix-techniques">
+      <h2>Choix techniques <a class="anchor" href="#choix-techniques">#</a></h2>
+      <p><code>guacd</code> (Apache Guacamole) a été retiré des dépôts de Debian 13. Pour rester en natif sans compiler de C :</p>
+      <ul>
+        <li><strong>SSH</strong> : bibliothèque officielle de Go (<code>golang.org/x/crypto/ssh</code>), terminal xterm.js côté navigateur.</li>
+        <li><strong>VNC</strong> : Gná relaie lui-même le protocole RFB, et le navigateur l'affiche avec noVNC.</li>
+        <li><strong>RDP</strong> : passerelle <code>gna-rdp</code> en Rust, fondée sur IronRDP, qui convertit l'écran RDP en flux VNC. L'affichage, l'enregistrement et la relecture sont donc les mêmes qu'en VNC.</li>
+        <li><strong>Application</strong> : Tauri 2, avec un relais local en Rust.</li>
+      </ul>
+      <p>xterm.js (MIT), noVNC (MPL-2.0) et asciinema-player (Apache 2.0) sont embarqués dans le binaire : aucune ressource externe n'est chargée.</p>
+
+    </section>
+
+    <section id="licence">
+      <h2>Licence <a class="anchor" href="#licence">#</a></h2>
+      <p>Gná est un <strong>logiciel propriétaire et gratuit</strong>, © 2026 Odin.</p>
+      <ul>
+        <li><strong>Autorisé</strong> : toute personne ou organisation peut télécharger, installer et utiliser gratuitement Gná, à titre personnel ou professionnel (y compris en entreprise ou en administration), sur autant de machines que nécessaire, à partir des fichiers d'installation officiels non modifiés.</li>
+        <li><strong>Soumis à l'accord écrit de l'auteur</strong> : modifier le logiciel, le redistribuer en dehors des téléchargements officiels, le vendre, le louer ou le sous-licencier (y compris sous forme de service payant reposant principalement sur Gná), retirer les mentions de droits d'auteur. La décompilation n'est permise que dans les cas prévus par la loi.</li>
+        <li><strong>Sans garantie</strong> : le logiciel est fourni « tel quel ». Dans les limites permises par la loi, l'auteur n'est pas responsable des dommages liés à son utilisation.</li>
+        <li>La licence prend fin en cas de non-respect de ces conditions. Elle est régie par le droit français. Le code source n'est pas public.</li>
+      </ul>
+      <p>Les composants tiers inclus gardent leur propre licence :</p>
+      <table>
+        <thead><tr><th>Composant</th><th>Licence</th></tr></thead>
+        <tbody>
+          <tr><td>noVNC</td><td>MPL-2.0 (fichiers non modifiés)</td></tr>
+          <tr><td>pako (via noVNC)</td><td>MIT</td></tr>
+          <tr><td>xterm.js</td><td>MIT</td></tr>
+          <tr><td>asciinema-player</td><td>Apache-2.0</td></tr>
+          <tr><td>ironrdp-rdpdr (version modifiée)</td><td>MIT ou Apache-2.0</td></tr>
+          <tr><td>Dépendances Go, Rust et npm</td><td>selon chaque module (MIT, BSD, Apache-2.0, ISC…)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="doc-nav">
+        <a href="index.html">← Retour à l'accueil</a>
+        <a href="#presentation">Haut de page ↑</a>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer class="footer">
+  <div class="wrap footer-in">
+    <div class="brand">
+      <img src="assets/gna-icone.svg" alt="" width="28" height="28">
+      <span>Gná <small data-version>v0.15.1</small></span>
+    </div>
+    <nav class="footer-links">
+      <a href="index.html">Accueil</a>
+      <a href="https://github.com/Odin-Yggdrasil" rel="noopener noreferrer external">GitHub</a>
+      <a href="mentions-legales.html">Mentions légales</a>
+    </nav>
+    <p class="muted small">Embarque xterm.js (MIT), noVNC (MPL-2.0), asciinema-player (Apache 2.0) et IronRDP (MIT/Apache 2.0). © 2026 Odin. Gná est un logiciel propriétaire et gratuit. Ce site mesure son audience avec Plausible, auto-hébergé et sans cookie.</p>
+  </div>
+</footer>
+
+<script src="script.js?v=20261011"></script>
+</body>
+</html>

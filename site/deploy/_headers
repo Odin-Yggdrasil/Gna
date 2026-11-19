@@ -1,0 +1,13 @@
+# En-têtes de sécurité pour un hébergement statique (Cloudflare Pages, Netlify…)
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://plausible.gjallarbru.ovh; connect-src https://plausible.gjallarbru.ovh; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+
+/telechargements/*
+  Content-Disposition: attachment

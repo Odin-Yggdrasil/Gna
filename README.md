@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.13.0-5FB3A1">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.15.3-5FB3A1">
   <img alt="Go" src="https://img.shields.io/badge/Go-serveur-00ADD8?logo=go&logoColor=white">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-passerelle%20RDP%20%2B%20app-000000?logo=rust">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
@@ -40,7 +40,7 @@ Les fichiers d'installation de chaque version sont dans les [**Releases**](../..
 | **Accès** | Terminal SSH, bureaux VNC et RDP (Windows, xrdp) dans le navigateur ; fichiers SSH (SFTP) et transferts vers les bureaux RDP |
 | **Sécurité** | Mot de passe + MFA (TOTP), droits par utilisateur et par groupe, empreintes des machines vérifiées, secrets chiffrés, journal d'audit |
 | **Sessions** | Plusieurs sessions en onglets ou en **mosaïque**, saisie synchronisée sur plusieurs terminaux, enregistrement et relecture |
-| **Confort** | Copier-coller direct, redimensionnement automatique, touches spéciales, bibliothèque de commandes, espaces de travail, favoris, dossiers, 7 thèmes |
+| **Confort** | Copier-coller direct (Ctrl+Maj+C dans les terminaux), redimensionnement automatique, touches spéciales, bibliothèque de commandes, espaces de travail, favoris, dossiers, 9 thèmes communs avec Saga et Andvari |
 | **Application** | Windows, Linux et Android (Tauri), certificat du serveur épinglé |
 | **Installation** | Paquet .deb (PostgreSQL, service systemd, configuration créés automatiquement) |
 
@@ -51,9 +51,25 @@ Les fichiers d'installation de chaque version sont dans les [**Releases**](../..
   </tr>
 </table>
 
-![Les thèmes : Sombre, Clair, Nord, Dracula, Gruvbox, Solarized](docs/images/themes.png)
+![Les thèmes de Gná](docs/images/themes.png)
 
-## État : étape 13 — thèmes et application Linux à jour
+## État : étape 14 — charte commune avec Saga et Andvari, jetons d'accès, liens directs
+
+- **Jetons d'accès personnels** (Paramètres › Jetons d'accès) : lecture seule de la liste de ses machines par un script ou un menu du bureau, sans mot de passe ni TOTP. Voir « Jetons d'accès et liens directs »
+- **Liens directs** : `gna://machine/<id>` ouvre l'application sur la session de cette machine ; `#/machines/<id>` fait de même dans le navigateur
+- **Rester connecté sur cet appareil** (case à l'écran de connexion) : pas de déconnexion pour inactivité sur ce poste, pour la durée maximale d'une session (`GNA_SESSION_TTL`, 12 h) ; mot de passe et TOTP restent demandés à la connexion. Les autres appareils gardent le délai d'inactivité (30 min)
+- **Session expirée** : l'interface revient d'elle-même à l'écran de connexion (vérification toutes les 30 s, qui ne prolonge pas la session) et rouvre la même page après reconnexion
+- **Terminal** : Ctrl+Maj+C copie la sélection dans le presse-papiers du poste (Ctrl+C reste l'interruption ^C)
+- **Application plus réactive** : le relais local réutilise ses connexions au serveur au lieu d'ouvrir une connexion TLS par requête ; le flou d'arrière-plan et les animations permanentes sont retirés dans l'application (WebKitGTK)
+
+- **Même design que [Saga](../Saga) et [Andvari](../andvari)** : fonds Nuit / Parchemin, police Noto Sans, rayons 8-12 px, barre du haut translucide, bindrune en tuile, anneau de runes sur l'écran de connexion. L'accent propre à Gná reste le bleu-vert
+- **Thèmes communs** aux trois applications : Gná (sombre, par défaut), Écume (clair), Fjord, Saga, Vélin, Nuit, Parchemin, Braise, Givre, ou Automatique (Gná ou Écume selon le système). Les anciens choix (Sombre, Clair, Nord, Dracula, Gruvbox, Solarized) sont convertis automatiquement
+- **Application** : l'écran local (choix du serveur, empreinte du certificat) reprend la même carte de connexion que l'interface web, en sombre ou en clair selon le système
+- **Même ergonomie que Saga** : pages avec adresse (`#/machines`, `#/sessions`, `#/journal`, `#/parametres` : un rechargement reste sur la page), en-têtes de page, bouton clair/sombre dans la barre du haut, dialogues avec en-tête et ✕, notifications éphémères, états vides illustrés, « / » pour rechercher une machine, identifiant de la dernière connexion prérempli
+- **Page Paramètres** (remplace la fenêtre « Mon compte » et les onglets Utilisateurs et Groupes) : menu latéral Compte, Apparence, Commandes, Utilisateurs, Groupes, À propos. Chaque utilisateur s'ouvre sur une fiche avec ses actions (rôle, désactivation, déverrouillage, mot de passe, MFA, suppression) ; la suppression d'une machine ou d'un groupe se fait depuis sa fenêtre de modification
+- **Arborescence** alignée sur Saga et Andvari : `server/` (Go + passerelle RDP), `clients/app/` (application), `packaging/` (paquet Debian, `install.sh`), `scripts/build.sh`, `assets/logo/`, `docs/`, `site/` ; binaires dans `dist/linux/`, installateurs dans `clients/installateurs/`
+
+## Étape 13 — thèmes et application Linux à jour
 
 - **Thèmes** : « Mon compte » → Thème : Système (suit le réglage clair/sombre de l'ordinateur), Sombre, Clair, Nord, Dracula, Gruvbox, Solarized. Le thème s'applique tout de suite, terminaux et bureaux à distance compris (couleurs ANSI adaptées à chaque thème), et il est **enregistré dans le compte** : il suit l'utilisateur d'un navigateur ou d'un appareil à l'autre
 - **Application Linux** (paquet `gna-app`, pour ne plus se confondre avec le paquet serveur `gna`) : téléchargements SFTP et RDP enregistrés dans le dossier Téléchargements (sans écraser un fichier existant, message de confirmation), relais local sur un port stable (les réglages de la page sont conservés d'un lancement à l'autre)
@@ -80,9 +96,9 @@ Les fichiers d'installation de chaque version sont dans les [**Releases**](../..
 
 ## Étape 9 — paquet Debian, fichiers SSH (SFTP), logo
 
-- **Paquet .deb du serveur** : `make deb` produit `dist/gna_<version>_amd64.deb`. Installation et mises à jour avec `sudo apt install ./gna_<version>_amd64.deb` (voir « Installation »). Une installation faite avec `install.sh` est reprise automatiquement : configuration, clé maître, base et enregistrements sont conservés
+- **Paquet .deb du serveur** : `make deb` produit `clients/installateurs/gna-server_<version>_amd64.deb`. Installation et mises à jour avec `sudo apt install ./gna_<version>_amd64.deb` (voir « Installation »). Une installation faite avec `install.sh` est reprise automatiquement : configuration, clé maître, base et enregistrements sont conservés
 - **Fichiers en SSH (SFTP)** : bouton « Fichiers » du terminal. Parcourir les dossiers de la cible, envoyer (bouton ou glisser-déposer sur le terminal), télécharger, créer un dossier. Tout passe par la connexion SSH du terminal, avec les droits du compte de la cible ; rien n'est stocké sur le serveur Gná. Journalisé (`file.upload`, `file.download`, `file.mkdir`). Désactivé avec `GNA_FILE_TRANSFER=false`
-- **Logo** : rune liée de Gná (interface web, favicon, icônes de l'application) ; fichiers sources dans `deploy/logo/`
+- **Logo** : rune liée de Gná (interface web, favicon, icônes de l'application) ; fichiers sources dans `assets/logo/`
 - `gna version` affiche la version installée
 
 ## Étape 8 — outils des bureaux à distance
@@ -121,11 +137,11 @@ $c=(Get-ChildItem 'Cert:\LocalMachine\Remote Desktop')[0]
 
 Limite : pas de son.
 
-**Installation** : `make build` compile la passerelle si Rust ≥ 1.89 est installé (rustup), sinon utilise le binaire précompilé fourni (`deploy/prebuilt/`, Linux x86-64, Debian 13 / Ubuntu 24.04). `install.sh` l'installe dans `/usr/local/bin/gna-rdp`.
+**Installation** : `make build` compile la passerelle si Rust ≥ 1.89 est installé (rustup), sinon utilise le binaire précompilé fourni (`packaging/prebuilt/`, Linux x86-64, Debian 13 / Ubuntu 24.04). `install.sh` l'installe dans `/usr/local/bin/gna-rdp`.
 
 ## Étape 6 — application Windows, Linux et Android
 
-Application de bureau et mobile (Tauri 2) dans `app/` : l'interface de Gná dans sa propre fenêtre, avec le certificat du serveur **épinglé** (empreinte validée au premier lancement, connexion bloquée s'il change). Voir [app/README.md](app/README.md).
+Application de bureau et mobile (Tauri 2) dans `clients/app/` : l'interface de Gná dans sa propre fenêtre, avec le certificat du serveur **épinglé** (empreinte validée au premier lancement, connexion bloquée s'il change). Voir [clients/app/README.md](clients/app/README.md).
 
 ## Étape 5 — enregistrement des sessions SSH et VNC
 
@@ -184,19 +200,19 @@ Gná tourne en natif : un binaire statique, un service systemd durci, un utilisa
 ### Avec le paquet .deb (recommandé)
 
 ```bash
-sudo apt install ./gna_0.13.0_amd64.deb      # installe aussi PostgreSQL si besoin
+sudo apt install ./gna-server_0.13.0_amd64.deb   # installe aussi PostgreSQL si besoin
 sudo -u gna gna user add admin --admin
 ```
 
 Le paquet crée l'utilisateur `gna`, la base, `/etc/gna/gna.env` (avec une clé maître neuve, une seule fois) et le service, puis le démarre. **Mise à jour** : la même commande `apt install` avec le nouveau fichier ; la configuration et les données sont conservées et le service redémarré. Désinstallation : `sudo apt remove gna` (les données restent ; `purge` indique comment tout effacer).
 
-Construire le paquet (Go 1.23+, `make`, `dpkg-deb`) : `make deb`.
+Construire le paquet (Go 1.23+, `make`, `dpkg-deb`) : `make deb` (résultat dans `clients/installateurs/`).
 
 ### Depuis les sources
 
 ```bash
-make build                 # récupère les dépendances et compile bin/gna
-sudo ./deploy/install.sh   # installe PostgreSQL si besoin, crée l'utilisateur gna, la base, la config et le service
+make build                    # tests, puis compile dist/linux/gna et dist/linux/gna-rdp
+sudo ./packaging/install.sh   # installe PostgreSQL si besoin, crée l'utilisateur gna, la base, la config et le service
 sudo -u gna gna user add admin --admin
 ```
 
@@ -220,7 +236,7 @@ journalctl -u gna -f
 sudo systemctl restart gna      # après une modification de /etc/gna/gna.env
 ```
 
-Mise à jour depuis les sources : `make build && sudo ./deploy/install.sh`, ou `make deb` puis `sudo apt install ./dist/gna_<version>_amd64.deb`.
+Mise à jour depuis les sources : `make build && sudo ./packaging/install.sh`, ou `make deb` puis `sudo apt install ./clients/installateurs/gna-server_<version>_amd64.deb`.
 
 ### Accès réseau et HTTPS
 
@@ -268,7 +284,7 @@ Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : `echo "�
 | `GNA_COOKIE_SECURE` | `true` | Cookie réservé au HTTPS (forcé à `true` quand Gná sert du HTTPS) |
 | `GNA_TRUST_PROXY` | `false` | Lire l'IP client dans `X-Forwarded-For` (derrière un reverse proxy) |
 | `GNA_SESSION_TTL` | `12h` | Durée maximale d'une session |
-| `GNA_IDLE_TIMEOUT` | `30m` | Déconnexion après inactivité |
+| `GNA_IDLE_TIMEOUT` | `30m` | Déconnexion après inactivité (sauf sessions « Rester connecté sur cet appareil ») |
 | `GNA_MAX_FAILURES` | `5` | Échecs avant verrouillage |
 | `GNA_LOCK_DURATION` | `15m` | Durée du verrouillage |
 | `GNA_ISSUER` | `Gná` | Nom affiché dans l'application TOTP |
@@ -290,9 +306,12 @@ Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : `echo "�
 | `POST` | `/api/auth/totp/enroll/confirm` | `enroll` |
 | `POST` | `/api/auth/totp/verify` | `mfa` |
 | `POST` | `/api/auth/logout` | toute session |
-| `GET` | `/api/me` | toute session |
+| `GET` | `/api/auth/session` | aucune (état de la session, sans la prolonger) |
+| `GET` | `/api/me` | toute session, ou jeton d'accès |
+| `GET` / `POST` | `/api/me/tokens` | `full` |
+| `DELETE` | `/api/me/tokens/{id}` | `full` |
 | `GET` | `/api/admin/audit?limit=100` | `full` + admin |
-| `GET` | `/api/targets` | `full` |
+| `GET` | `/api/targets` | `full`, ou jeton d'accès |
 | `GET` (WebSocket) | `/api/targets/{id}/ssh?cols=&rows=` | `full` |
 | `GET` (WebSocket) | `/api/targets/{id}/vnc` | `full` |
 | `POST` | `/api/admin/targets` | `full` + admin |
@@ -309,6 +328,64 @@ Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : `echo "�
 | `GET` | `/api/admin/recordings/{session}/search?q=` | `full` + admin |
 | `GET` | `/api/admin/recordings/search?q=&days=` | `full` + admin |
 
+## Jetons d'accès et liens directs
+
+### Créer un jeton
+
+Paramètres › **Jetons d'accès** › nom libre (ex. « bureau gungnir ») › **Créer un jeton**. Le jeton (`gna_…`) n'est affiché qu'une fois : le ranger aussitôt dans un gestionnaire de secrets (Andvari). Gná n'en garde que l'empreinte SHA-256. La même section liste les jetons (création, dernière utilisation et IP) et permet de les révoquer.
+
+**Portée** : lecture seule. Un jeton n'est accepté que par `GET /api/targets` (les machines accessibles à son propriétaire) et `GET /api/me` (identité). Il n'ouvre ni terminal, ni bureau, ni SFTP, et ne donne accès à aucune action d'administration : toutes les autres routes n'acceptent que la session du navigateur. Il cesse de fonctionner si le compte est désactivé ou supprimé. Chaque utilisation est inscrite au journal (`api_token.used`, `api_token.denied`, `api_token.created`, `api_token.revoked`) et limitée en débit par adresse IP (30 par minute, 10 d'affilée). 20 jetons au plus par utilisateur.
+
+```bash
+curl -fsS -H "Authorization: Bearer gna_…" https://gna.lan:8443/api/targets
+```
+
+Avec le certificat auto-signé de Gná, ajouter `--cacert` (fichier exporté depuis le serveur, `/var/lib/gna/tls/`) ou `--pinnedpubkey`.
+
+Réponse : un tableau JSON, une entrée par machine :
+
+```json
+[
+  {
+    "id": 42,
+    "name": "srv-web-01",
+    "protocol": "ssh",
+    "host": "10.0.1.20",
+    "port": 22,
+    "username": "root",
+    "auth_method": "key",
+    "host_key": "",
+    "description": "Serveur web",
+    "keyboard_layout": "",
+    "folder": "Serveurs",
+    "has_secret": true,
+    "created_at": "2026-10-11T01:41:07+02:00",
+    "host_key_fingerprint": "SHA256:…",
+    "favorite": true
+  }
+]
+```
+
+`protocol` vaut `ssh`, `vnc` ou `rdp` ; `folder` est vide pour une machine sans dossier ; `host_key` est toujours vide avec un jeton. Aucun secret n'est jamais renvoyé. Jeton invalide ou révoqué : `401` ; trop de requêtes : `429` (en-tête `Retry-After`).
+
+### Liens vers une machine
+
+| Lien | Effet |
+|---|---|
+| `gna://machine/<id>` | ouvre l'application Gná (ou la fenêtre déjà ouverte) sur la session de la machine `<id>` |
+| `gna://machine/<id>/ssh`, `/vnc`, `/rdp` | identique (le protocole est celui de la machine) |
+| `https://<serveur>:8443/#/machines/<id>` | même chose dans le navigateur |
+
+Sans session ouverte, l'écran de connexion (mot de passe + TOTP) s'affiche d'abord, puis la session de la machine s'ouvre. Une machine inexistante ou non attribuée affiche « Machine introuvable ». Les sessions déjà ouvertes dans l'application restent ouvertes.
+
+Sous Linux, le paquet `gna-app` associe le schéma `gna://` à l'application (`xdg-open gna://machine/42`) ; l'AppImage l'enregistre à son premier lancement ; l'installeur Windows le déclare dans le registre. Exemple de menu rofi :
+
+```bash
+curl -fsS -H "Authorization: Bearer $(andvari get gna-jeton)" https://gna.lan:8443/api/targets \
+  | jq -r '.[] | "\(.id)\t\(.name)\t\(.protocol)\t\(.folder)"' \
+  | rofi -dmenu -p Gná | cut -f1 | xargs -r -I{} xdg-open "gna://machine/{}"
+```
+
 ## En production
 
 - Toujours en **HTTPS** : certificat auto-signé intégré, vrai certificat, ou reverse proxy local (Gná sur `127.0.0.1` + `GNA_TRUST_PROXY=true`).
@@ -316,31 +393,38 @@ Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : `echo "�
 - Sauvegarder **la base, `/var/lib/gna/recordings` et la clé maître séparément**. Sans la clé, les secrets et les enregistrements chiffrés sont perdus.
 - Ne pas exposer PostgreSQL : il n'écoute que sur la machine par défaut.
 
-## Structure
+## Arborescence
 
 ```
-cmd/gna/            point d'entrée et commandes CLI
-internal/config/    lecture des variables d'environnement
-internal/secure/    Argon2id, chiffrement AES-GCM
-internal/totp/      TOTP (RFC 6238)
-internal/store/     PostgreSQL et migrations SQL
-internal/auth/      logique de connexion et de sessions
-internal/api/       routes HTTP, middlewares, limitation de débit
-internal/tlsutil/   HTTPS : certificat auto-signé, configuration TLS
-internal/sshproxy/  connexions SSH sortantes, clé d'hôte épinglée
-internal/vncproxy/  relais VNC (RFB), authentification côté serveur
-internal/recording/ enregistrements chiffrés (asciicast) et recherche
-internal/web/       interface web embarquée
-deploy/             service systemd, modèle de configuration, script d'installation
-app/                application Windows, Linux, Android (Tauri + relais Rust)
-rdpbridge/          passerelle RDP → VNC (Rust, IronRDP) : écran, clavier, presse-papiers, lecteur partagé
-rdpbridge/vendor/   ironrdp-rdpdr avec un correctif (nom du lecteur vu par xrdp)
-internal/transfer/  dossiers de transfert de fichiers des sessions RDP
-internal/api/sftp.go  transfert de fichiers des sessions SSH (SFTP)
-deploy/deb/         paquet Debian du serveur (make deb)
-deploy/logo/        logo et icônes (rune liée)
-internal/rdp/       pilotage de la passerelle RDP
+gna/
+├── server/
+│   ├── cmd/gna/              Point d'entrée et commandes CLI
+│   ├── internal/
+│   │   ├── api/              Routes HTTP, middlewares, limitation de débit, SFTP
+│   │   ├── auth/             Connexion et sessions
+│   │   ├── config/           Variables d'environnement
+│   │   ├── secure/           Argon2id, chiffrement AES-GCM
+│   │   ├── totp/             TOTP (RFC 6238)
+│   │   ├── store/            PostgreSQL et migrations SQL
+│   │   ├── tlsutil/          HTTPS : certificat auto-signé, configuration TLS
+│   │   ├── sshproxy/         Connexions SSH sortantes, clé d'hôte épinglée
+│   │   ├── vncproxy/         Relais VNC (RFB), authentification côté serveur
+│   │   ├── rdp/              Pilotage de la passerelle RDP
+│   │   ├── transfer/         Dossiers de transfert des sessions RDP
+│   │   ├── recording/        Enregistrements chiffrés (asciicast, VNC) et recherche
+│   │   └── web/static/       Interface (HTML/CSS/JS, sans étape de compilation)
+│   └── rdpbridge/            Passerelle RDP → VNC (Rust, IronRDP) ; vendor/ : ironrdp-rdpdr corrigé
+├── clients/
+│   ├── app/                  Application Windows, Linux, Android (Tauri + relais Rust)
+│   └── installateurs/        Paquets et installateurs produits
+├── packaging/                Paquet Debian (deb/), install.sh, passerelle RDP précompilée
+├── scripts/build.sh          Tests + compilation dans dist/linux
+├── assets/logo/              Bindrune Gná (bindrune/) et pistes écartées (variantes/)
+├── site/                     Site de présentation et de téléchargement
+└── docs/                     Architecture, notes de version, captures
 ```
+
+Voir [docs/architecture.md](docs/architecture.md).
 
 ## Ajouter une cible SSH
 

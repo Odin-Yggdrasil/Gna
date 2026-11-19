@@ -1,0 +1,32 @@
+[package]
+name = "gna-app"
+version = "0.14.1"
+description = "Application Gná : bastion d'accès SSH, VNC et RDP"
+edition = "2021"
+rust-version = "1.90"
+
+[lib]
+name = "gna_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+gna-relay = { path = "../relay" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = [] }
+tauri-plugin-deep-link = "2"
+url = "2"
+
+# Liens gna://… : un second lancement transmet le lien à la fenêtre déjà ouverte.
+[target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

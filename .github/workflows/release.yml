@@ -1,6 +1,6 @@
 # Publication d'une version de Gná : serveur (.deb), application Linux (.deb, AppImage) et
 # Windows (installeur .exe), puis création de la « Release » GitHub.
-# L'APK Android est compilé et signé en local (app/scripts/build-android.sh), puis ajouté
+# L'APK Android est compilé et signé en local (clients/app/scripts/build-android.sh), puis ajouté
 # à la Release : gh release upload v<version> Gna-<version>-android.apk
 #
 # Déclenchement :
@@ -37,7 +37,7 @@ jobs:
           if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "v$V" ]]; then
             echo "::error::L'étiquette $GITHUB_REF_NAME ne correspond pas au fichier VERSION ($V)"; exit 1
           fi
-          for f in app/src-tauri/tauri.conf.json app/package.json; do
+          for f in clients/app/src-tauri/tauri.conf.json clients/app/package.json; do
             grep -q "\"version\": \"$V\"" "$f" || { echo "::error::$f n'est pas en version $V"; exit 1; }
           done
           echo "version=$V" >> "$GITHUB_OUTPUT"
@@ -49,23 +49,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version-file: server/go.mod
       - uses: dtolnay/rust-toolchain@stable
-      - run: make build
-      - run: go test ./...
-      - run: ./deploy/deb/build.sh ${{ needs.version.outputs.version }}
-      - run: mv dist/gna_*_amd64.deb "dist/gna-server_${{ needs.version.outputs.version }}_amd64.deb"
+      - run: ./scripts/build.sh
+      - run: ./packaging/deb/build-deb.sh ${{ needs.version.outputs.version }}
       - uses: actions/upload-artifact@v4
         with:
           name: server
-          path: dist/*.deb
+          path: clients/installateurs/gna-server_*.deb
 
   app-linux:
     needs: version
     runs-on: ubuntu-22.04
     defaults:
       run:
-        working-directory: app
+        working-directory: clients/app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -79,9 +77,9 @@ jobs:
       - run: npx tauri build --bundles deb,appimage
       - run: |
           V=${{ needs.version.outputs.version }}
-          mkdir -p ../out
-          cp src-tauri/target/release/bundle/deb/*.deb "../out/gna-app_${V}_amd64.deb"
-          cp src-tauri/target/release/bundle/appimage/*.AppImage "../out/Gna-${V}-x86_64.AppImage"
+          mkdir -p ../../out
+          cp src-tauri/target/release/bundle/deb/*.deb "../../out/gna-app_${V}_amd64.deb"
+          cp src-tauri/target/release/bundle/appimage/*.AppImage "../../out/Gna-${V}-x86_64.AppImage"
       - uses: actions/upload-artifact@v4
         with:
           name: app-linux
@@ -92,7 +90,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: app
+        working-directory: clients/app
         shell: bash
     steps:
       - uses: actions/checkout@v4
@@ -103,8 +101,8 @@ jobs:
       - run: npm ci
       - run: npx tauri build --bundles nsis
       - run: |
-          mkdir -p ../out
-          cp src-tauri/target/release/bundle/nsis/*-setup.exe "../out/Gna-${{ needs.version.outputs.version }}-windows-setup.exe"
+          mkdir -p ../../out
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe "../../out/Gna-${{ needs.version.outputs.version }}-windows-setup.exe"
       - uses: actions/upload-artifact@v4
         with:
           name: app-windows

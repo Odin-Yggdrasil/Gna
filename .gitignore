@@ -1,14 +1,23 @@
 .env
 /gna
 /bin/
-app/node_modules/
-app/src-tauri/target/
-app/src-tauri/gen/
-app/relay/target/
-rdpbridge/target/
-/dist/
+clients/app/node_modules/
+clients/app/src-tauri/target/
+clients/app/src-tauri/gen/
+clients/app/relay/target/
+server/rdpbridge/target/
+/dist/linux/
+/archives/
 /go.dev.mod
 /go.dev.sum
 *.deb
 *.apk
 *.jks
+/.dev/
+# Installateurs produits (publiés dans les Releases GitHub, pas dans le dépôt)
+/clients/installateurs/
+/site/telechargements/*
+!/site/telechargements/SHA256SUMS
+# Réglages locaux de Claude Code, copies de conflit de la synchronisation Proton Drive
+/.claude/
+*conflit local*

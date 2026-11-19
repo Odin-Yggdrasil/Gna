@@ -1,0 +1,121 @@
+/* Gná — écran local de l'application (choix du serveur, empreinte du certificat).
+   Même charte que l'interface web de Gná, Saga et Andvari : fonds Nuit / Parchemin,
+   Noto Sans, rayons 8-12 px, bindrune en tuile, anneau de runes. Accent : bleu-vert.
+   Thème : Gná (sombre) ou Écume (clair) selon le réglage du système. */
+
+:root {
+  --radius: 12px;
+  --font: "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "Fira Code", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+
+  --bg: #0E1116; --surface: #161B22; --surface-2: #1C222B; --border: #2A313C;
+  --text: #E6E9EF; --muted: #8B949E;
+  --accent: #5FB3A1; --accent-strong: #77C9B6; --on-accent: #0E1116; --accent-soft: rgba(95, 179, 161, .12);
+  --warn: #D9A35B; --danger: #F0716B;
+  --shadow: 0 20px 50px rgba(0, 0, 0, .45);
+  --focus: 0 0 0 3px rgba(95, 179, 161, .35);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #F6F8FA; --surface: #FFFFFF; --surface-2: #F0F3F6; --border: #D0D7DE;
+    --text: #1F2328; --muted: #59636E;
+    --accent: #2F8F7B; --accent-strong: #257564; --on-accent: #FFFFFF; --accent-soft: rgba(47, 143, 123, .10);
+    --warn: #9A6700; --danger: #C9302C;
+    --shadow: 0 20px 50px rgba(31, 35, 40, .12);
+    --focus: 0 0 0 3px rgba(47, 143, 123, .3);
+    color-scheme: light;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.5 var(--font); -webkit-font-smoothing: antialiased;
+}
+p { margin: 0; line-height: 1.5; }
+h1 { margin: 0; line-height: 1.2; letter-spacing: -.01em; font-size: 1.3rem; font-weight: 800; }
+code { font-family: var(--mono); font-size: .88em; }
+.hint code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: .05em .35em; }
+
+/* ---------- carte de connexion et anneau de runes ---------- */
+.auth { min-height: 100%; display: grid; place-items: center; padding: 24px 16px; position: relative; overflow: hidden; }
+.auth-ring {
+  position: absolute; width: 900px; height: 900px; opacity: .10; pointer-events: none; animation: spin 240s linear infinite;
+  background: var(--accent); -webkit-mask: url(anneau-runes.svg) center / contain no-repeat; mask: url(anneau-runes.svg) center / contain no-repeat;
+}
+.card {
+  position: relative; width: 100%; max-width: 440px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.auth-head { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; }
+.tagline { margin-top: 2px; color: var(--muted); font-size: .85rem; }
+.auth-foot { color: var(--muted); font-size: .8rem; text-align: center; }
+.view { display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------- bindrune en tuile ---------- */
+.mark { display: block; flex: none; width: 46px; height: 46px; }
+.mark .tile { fill: var(--accent); }
+.mark .glyph { fill: none; stroke: var(--on-accent); stroke-width: 5; stroke-linecap: square; stroke-linejoin: miter; }
+
+/* ---------- formulaires (comme Andvari et Saga) ---------- */
+label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+input {
+  font: inherit; font-size: 15px; color: var(--text); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; width: 100%;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+input:focus { border-color: var(--accent); box-shadow: var(--focus); }
+
+/* Boutons : bouton nu = principal (accent), .ghost = secondaire, .danger. */
+button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 42px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--accent);
+  background: var(--accent); color: var(--on-accent);
+  font: inherit; font-weight: 600; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, transform .05s;
+}
+button:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+button:active { transform: translateY(1px); }
+button:focus-visible { outline: none; box-shadow: var(--focus); }
+button:disabled { opacity: .55; cursor: progress; }
+button.ghost, button.danger { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+button.ghost:hover { border-color: var(--muted); }
+button.danger { color: var(--danger); }
+button.danger:hover { border-color: var(--danger); }
+
+.hint { font-size: 12.5px; color: var(--muted); }
+.error {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  color: var(--danger); border-radius: 8px; padding: 10px 12px; font-size: 14px;
+}
+.callout {
+  padding: 12px 14px; border-radius: 10px; font-size: 14px;
+  border: 1px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+.callout strong { color: var(--warn); }
+
+/* ---------- empreintes du certificat ---------- */
+.cmd {
+  display: block; font-size: .82rem; padding: 10px 12px; border-radius: 10px;
+  background: #0B0E12; border: 1px solid #30363D; color: #E6E9EF;
+}
+.fp-box {
+  display: flex; flex-direction: column; gap: 6px; padding: 12px 14px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2);
+}
+.fp-label { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.fp { font-size: 13px; color: var(--accent); word-break: break-all; line-height: 1.6; }
+.fp.old { color: var(--muted); text-decoration: line-through; }
+
+.busy { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 0; color: var(--muted); }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

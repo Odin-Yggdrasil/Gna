@@ -1,0 +1,10 @@
+[Desktop Entry]
+Categories={{categories}}
+Comment={{comment}}
+Exec={{exec}} %u
+StartupWMClass={{exec}}
+Icon={{icon}}
+Name=Gná
+Terminal=false
+Type=Application
+MimeType=x-scheme-handler/gna;
