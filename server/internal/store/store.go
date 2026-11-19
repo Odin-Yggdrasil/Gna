@@ -231,7 +231,8 @@ type Session struct {
 	CreatedAt  time.Time
 	LastSeenAt time.Time
 	ExpiresAt  time.Time
-	Remember   bool // « Rester connecté sur cet appareil » : pas de délai d'inactivité
+	Remember   bool       // « Rester connecté sur cet appareil » : jamais verrouillée pour inactivité
+	MFAAt      *time.Time // dernier code TOTP validé (sessions « full » et « locked »)
 }
 
 func (s *Store) CreateSession(ctx context.Context, tokenHash []byte, userID int64, stage string, expires time.Time, ip, ua string, remember bool) error {
@@ -243,9 +244,9 @@ func (s *Store) CreateSession(ctx context.Context, tokenHash []byte, userID int6
 // SessionByHash renvoie une session non expirée.
 func (s *Store) SessionByHash(ctx context.Context, tokenHash []byte) (*Session, error) {
 	se := &Session{}
-	err := s.db.QueryRow(ctx, `SELECT token_hash, user_id, stage, created_at, last_seen_at, expires_at, remember
+	err := s.db.QueryRow(ctx, `SELECT token_hash, user_id, stage, created_at, last_seen_at, expires_at, mfa_at, remember
 		FROM sessions WHERE token_hash=$1 AND expires_at > now()`, tokenHash).
-		Scan(&se.TokenHash, &se.UserID, &se.Stage, &se.CreatedAt, &se.LastSeenAt, &se.ExpiresAt, &se.Remember)
+		Scan(&se.TokenHash, &se.UserID, &se.Stage, &se.CreatedAt, &se.LastSeenAt, &se.ExpiresAt, &se.MFAAt, &se.Remember)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -257,9 +258,16 @@ func (s *Store) TouchSession(ctx context.Context, tokenHash []byte) error {
 	return err
 }
 
+// LockSession verrouille une session inactive (le mot de passe la déverrouillera).
+func (s *Store) LockSession(ctx context.Context, tokenHash []byte) error {
+	_, err := s.db.Exec(ctx, `UPDATE sessions SET stage='locked' WHERE token_hash=$1 AND stage='full'`, tokenHash)
+	return err
+}
+
 // RotateSession remplace un jeton par un nouveau en changeant d'étape
 // (ex. "mfa" → "full"). Changer de jeton à chaque élévation empêche la fixation de session.
-func (s *Store) RotateSession(ctx context.Context, oldHash, newHash []byte, stage string, expires time.Time) error {
+// mfaAt est l'heure du dernier code TOTP validé, conservée d'une session à la suivante.
+func (s *Store) RotateSession(ctx context.Context, oldHash, newHash []byte, stage string, expires time.Time, mfaAt *time.Time) error {
 	return pgx.BeginFunc(ctx, s.db, func(tx pgx.Tx) error {
 		var uid int64
 		var ip, ua string
@@ -272,8 +280,8 @@ func (s *Store) RotateSession(ctx context.Context, oldHash, newHash []byte, stag
 		if err != nil {
 			return err
 		}
-		_, err = tx.Exec(ctx, `INSERT INTO sessions (token_hash, user_id, stage, expires_at, ip, user_agent, remember)
-			VALUES ($1,$2,$3,$4,$5,$6,$7)`, newHash, uid, stage, expires, ip, ua, remember)
+		_, err = tx.Exec(ctx, `INSERT INTO sessions (token_hash, user_id, stage, expires_at, ip, user_agent, mfa_at, remember)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, newHash, uid, stage, expires, ip, ua, mfaAt, remember)
 		return err
 	})
 }
@@ -283,9 +291,14 @@ func (s *Store) DeleteSession(ctx context.Context, tokenHash []byte) error {
 	return err
 }
 
-func (s *Store) PurgeExpiredSessions(ctx context.Context, idle time.Duration) (int64, error) {
+// PurgeExpiredSessions supprime les sessions expirées, et les sessions inactives qui ne
+// peuvent plus être déverrouillées par le mot de passe seul (code TOTP trop ancien).
+// Les sessions « Rester connecté sur cet appareil » ne sont limitées que par leur expiration.
+func (s *Store) PurgeExpiredSessions(ctx context.Context, idle, mfaRemember time.Duration) (int64, error) {
 	tag, err := s.db.Exec(ctx, `DELETE FROM sessions WHERE expires_at <= now()
-		OR (NOT remember AND last_seen_at < now() - make_interval(secs => $1))`, idle.Seconds())
+		OR (NOT remember AND last_seen_at < now() - make_interval(secs => $1)
+		    AND NOT (stage IN ('full', 'locked') AND mfa_at IS NOT NULL AND mfa_at > now() - make_interval(secs => $2)))`,
+		idle.Seconds(), mfaRemember.Seconds())
 	return tag.RowsAffected(), err
 }
 

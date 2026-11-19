@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.15.3-5FB3A1">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.15.4-5FB3A1">
   <img alt="Go" src="https://img.shields.io/badge/Go-serveur-00ADD8?logo=go&logoColor=white">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-passerelle%20RDP%20%2B%20app-000000?logo=rust">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
@@ -53,12 +53,14 @@ Les fichiers d'installation de chaque version sont dans les [**Releases**](../..
 
 ![Les thèmes de Gná](docs/images/themes.png)
 
-## État : étape 14 — charte commune avec Saga et Andvari, jetons d'accès, liens directs
+## État : étape 15 — verrouillage, « rester connecté », jetons d'accès, liens directs, charte commune
 
+- **Verrouillage au lieu de déconnexion** : après 30 min sans activité (`GNA_IDLE_TIMEOUT`), la session est verrouillée. Le **mot de passe seul** la déverrouille tant que le dernier code TOTP date de moins de 4 h (`GNA_MFA_REMEMBER`) ; au-delà, connexion complète avec code TOTP. L'expiration absolue (`GNA_SESSION_TTL`, 12 h) ne change pas
+- **Rester connecté sur cet appareil** (case à l'écran de connexion) : ni verrouillage ni déconnexion pour inactivité sur ce poste, pour la durée maximale d'une session (12 h) ; mot de passe et TOTP restent demandés à la connexion. Les autres appareils gardent le verrouillage après 30 min
+- **L'interface suit l'état du serveur** : toutes les 30 s, elle vérifie la session ; un verrouillage ou une fin de session côté serveur affiche aussitôt l'écran correspondant, puis la même page revient après déverrouillage ou reconnexion
+- **Seule l'activité réelle compte** (clavier, souris, toucher, saisie dans un terminal ou un bureau) : laisser la page ouverte ne repousse pas le verrouillage. Les connexions aux machines sont coupées au verrouillage ; un clic sur « Reconnecter » les rouvre après déverrouillage. « Changer d'utilisateur » depuis l'écran de verrouillage ferme la session
 - **Jetons d'accès personnels** (Paramètres › Jetons d'accès) : lecture seule de la liste de ses machines par un script ou un menu du bureau, sans mot de passe ni TOTP. Voir « Jetons d'accès et liens directs »
 - **Liens directs** : `gna://machine/<id>` ouvre l'application sur la session de cette machine ; `#/machines/<id>` fait de même dans le navigateur
-- **Rester connecté sur cet appareil** (case à l'écran de connexion) : pas de déconnexion pour inactivité sur ce poste, pour la durée maximale d'une session (`GNA_SESSION_TTL`, 12 h) ; mot de passe et TOTP restent demandés à la connexion. Les autres appareils gardent le délai d'inactivité (30 min)
-- **Session expirée** : l'interface revient d'elle-même à l'écran de connexion (vérification toutes les 30 s, qui ne prolonge pas la session) et rouvre la même page après reconnexion
 - **Terminal** : Ctrl+Maj+C copie la sélection dans le presse-papiers du poste (Ctrl+C reste l'interruption ^C)
 - **Application plus réactive** : le relais local réutilise ses connexions au serveur au lieu d'ouvrir une connexion TLS par requête ; le flou d'arrière-plan et les animations permanentes sont retirés dans l'application (WebKitGTK)
 
@@ -67,7 +69,7 @@ Les fichiers d'installation de chaque version sont dans les [**Releases**](../..
 - **Application** : l'écran local (choix du serveur, empreinte du certificat) reprend la même carte de connexion que l'interface web, en sombre ou en clair selon le système
 - **Même ergonomie que Saga** : pages avec adresse (`#/machines`, `#/sessions`, `#/journal`, `#/parametres` : un rechargement reste sur la page), en-têtes de page, bouton clair/sombre dans la barre du haut, dialogues avec en-tête et ✕, notifications éphémères, états vides illustrés, « / » pour rechercher une machine, identifiant de la dernière connexion prérempli
 - **Page Paramètres** (remplace la fenêtre « Mon compte » et les onglets Utilisateurs et Groupes) : menu latéral Compte, Apparence, Commandes, Utilisateurs, Groupes, À propos. Chaque utilisateur s'ouvre sur une fiche avec ses actions (rôle, désactivation, déverrouillage, mot de passe, MFA, suppression) ; la suppression d'une machine ou d'un groupe se fait depuis sa fenêtre de modification
-- **Arborescence** alignée sur Saga et Andvari : `server/` (Go + passerelle RDP), `clients/app/` (application), `packaging/` (paquet Debian, `install.sh`), `scripts/build.sh`, `assets/logo/`, `docs/`, `site/` ; binaires dans `dist/linux/`, installateurs dans `clients/installateurs/`
+- **Arborescence** alignée sur Saga et Andvari : `server/` (Go + passerelle RDP), `clients/app/` (application), `packaging/` (paquet Debian, `install.sh`), `scripts/build.sh`, `assets/logo/`, `docs/`, `site/` ; binaires dans `dist/linux/`, installateurs dans `clients/installateurs/` (publiés dans les Releases)
 
 ## Étape 13 — thèmes et application Linux à jour
 
@@ -200,7 +202,7 @@ Gná tourne en natif : un binaire statique, un service systemd durci, un utilisa
 ### Avec le paquet .deb (recommandé)
 
 ```bash
-sudo apt install ./gna-server_0.13.0_amd64.deb   # installe aussi PostgreSQL si besoin
+sudo apt install ./gna-server_0.15.4_amd64.deb   # installe aussi PostgreSQL si besoin
 sudo -u gna gna user add admin --admin
 ```
 
@@ -284,7 +286,8 @@ Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : `echo "�
 | `GNA_COOKIE_SECURE` | `true` | Cookie réservé au HTTPS (forcé à `true` quand Gná sert du HTTPS) |
 | `GNA_TRUST_PROXY` | `false` | Lire l'IP client dans `X-Forwarded-For` (derrière un reverse proxy) |
 | `GNA_SESSION_TTL` | `12h` | Durée maximale d'une session |
-| `GNA_IDLE_TIMEOUT` | `30m` | Déconnexion après inactivité (sauf sessions « Rester connecté sur cet appareil ») |
+| `GNA_IDLE_TIMEOUT` | `30m` | Verrouillage de la session après inactivité (sauf sessions « Rester connecté sur cet appareil ») |
+| `GNA_MFA_REMEMBER` | `4h` | Déverrouillage par mot de passe seul tant que le dernier code TOTP date de moins de cette durée (`off` : code à chaque fois) |
 | `GNA_MAX_FAILURES` | `5` | Échecs avant verrouillage |
 | `GNA_LOCK_DURATION` | `15m` | Durée du verrouillage |
 | `GNA_ISSUER` | `Gná` | Nom affiché dans l'application TOTP |
@@ -306,7 +309,8 @@ Le mot de passe est demandé sans écho, ou lu sur l'entrée standard : `echo "�
 | `POST` | `/api/auth/totp/enroll/confirm` | `enroll` |
 | `POST` | `/api/auth/totp/verify` | `mfa` |
 | `POST` | `/api/auth/logout` | toute session |
-| `GET` | `/api/auth/session` | aucune (état de la session, sans la prolonger) |
+| `POST` | `/api/auth/ping` | aucune (état de la session ; ne compte comme activité que si `active`) |
+| `POST` | `/api/auth/unlock` | `locked` |
 | `GET` | `/api/me` | toute session, ou jeton d'accès |
 | `GET` / `POST` | `/api/me/tokens` | `full` |
 | `DELETE` | `/api/me/tokens/{id}` | `full` |
@@ -470,6 +474,7 @@ Le flux VNC entre Gná et la cible n'est pas chiffré par le protocole : limiter
 11. ~~Mosaïque et saisie synchronisée (SSH)~~
 12. ~~Organisation des machines (dossiers), bibliothèque de commandes, espaces de travail~~
 13. ~~Thèmes, mise à jour de l'application Linux~~
+14. ~~Verrouillage après inactivité (mot de passe seul pendant 4 h)~~
 
 ## Licence
 

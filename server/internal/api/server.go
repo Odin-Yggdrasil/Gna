@@ -69,9 +69,9 @@ func (s *Server) Handler() http.Handler {
 	mux.Handle("POST /api/auth/totp/enroll", s.limited(s.require(auth.StageEnroll, s.handleEnrollStart)))
 	mux.Handle("POST /api/auth/totp/enroll/confirm", s.limited(s.require(auth.StageEnroll, s.handleEnrollConfirm)))
 	mux.Handle("POST /api/auth/logout", s.require("", s.handleLogout))
-	// État de la session sans la prolonger : l'interface revient à l'écran de connexion
-	// dès que la session a expiré (inactivité, durée maximale, compte désactivé).
-	mux.HandleFunc("GET /api/auth/session", s.handleSessionState)
+	mux.Handle("POST /api/auth/unlock", s.limited(s.require(auth.StageLocked, s.handleUnlock)))
+	// Vérification périodique de l'interface (verrouillage, expiration) : voir handlePing.
+	mux.Handle("POST /api/auth/ping", http.HandlerFunc(s.handlePing))
 
 	// Session en cours (toute étape : l'interface s'en sert pour savoir quoi afficher)
 	mux.Handle("GET /api/me", s.readable("", s.handleMe))
@@ -208,6 +208,12 @@ func (s *Server) require(stage string, h http.HandlerFunc) http.Handler {
 			s.internalError(w, err)
 			return
 		}
+		if id.Session.Stage == auth.StageLocked && stage != "" && stage != auth.StageLocked {
+			// Session verrouillée par inactivité : le cookie est gardé, l'interface
+			// affiche l'écran de déverrouillage (mot de passe seul).
+			writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "session verrouillée après inactivité", "locked": true})
+			return
+		}
 		if stage != "" && id.Session.Stage != stage {
 			writeError(w, http.StatusForbidden, "étape d'authentification incorrecte")
 			return
@@ -302,6 +308,50 @@ func (s *Server) finishPromotion(w http.ResponseWriter, token string, err error)
 	}
 }
 
+func (s *Server) handleUnlock(w http.ResponseWriter, r *http.Request) {
+	var req struct{ Password string }
+	if !decode(w, r, &req) {
+		return
+	}
+	token, expires, err := s.auth.Unlock(r.Context(), identity(r), req.Password, s.client(r))
+	switch {
+	case errors.Is(err, auth.ErrInvalidCredentials):
+		writeError(w, http.StatusUnauthorized, "mot de passe incorrect")
+	case errors.Is(err, auth.ErrUnauthenticated):
+		s.clearCookie(w)
+		writeError(w, http.StatusUnauthorized, "session expirée, reconnectez-vous")
+	case err != nil:
+		s.internalError(w, err)
+	default:
+		s.setCookie(w, token, time.Until(expires))
+		writeJSON(w, http.StatusOK, map[string]string{"stage": auth.StageFull})
+	}
+}
+
+// handlePing : vérification périodique de l'interface. Elle ne compte comme activité que
+// si l'utilisateur a réellement agi (clavier, souris, toucher) depuis la précédente.
+func (s *Server) handlePing(w http.ResponseWriter, r *http.Request) {
+	var req struct{ Active bool }
+	if !decode(w, r, &req) {
+		return
+	}
+	id, err := s.auth.Check(r.Context(), s.readCookie(r), req.Active)
+	if errors.Is(err, auth.ErrUnauthenticated) {
+		s.clearCookie(w)
+		writeError(w, http.StatusUnauthorized, "non authentifié")
+		return
+	}
+	if err != nil {
+		s.internalError(w, err)
+		return
+	}
+	out := map[string]any{"stage": id.Session.Stage, "remember": id.Session.Remember}
+	if id.Session.Stage == auth.StageFull && !id.Session.Remember {
+		out["idle_left_s"] = int(s.auth.IdleLeft(id.Session).Seconds())
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	if err := s.auth.Logout(r.Context(), identity(r), s.client(r)); err != nil {
 		s.internalError(w, err)
@@ -309,24 +359,6 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	s.clearCookie(w)
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func (s *Server) handleSessionState(w http.ResponseWriter, r *http.Request) {
-	id, err := s.auth.Peek(r.Context(), s.readCookie(r))
-	if errors.Is(err, auth.ErrUnauthenticated) {
-		s.clearCookie(w)
-		writeError(w, http.StatusUnauthorized, "session expirée")
-		return
-	}
-	if err != nil {
-		s.internalError(w, err)
-		return
-	}
-	out := map[string]any{"stage": id.Session.Stage, "expires_at": id.Session.ExpiresAt, "remember": id.Session.Remember}
-	if !id.Session.Remember {
-		out["idle_expires_at"] = id.Session.LastSeenAt.Add(s.cfg.IdleTimeout)
-	}
-	writeJSON(w, http.StatusOK, out)
 }
 
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {

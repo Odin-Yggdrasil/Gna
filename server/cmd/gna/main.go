@@ -146,7 +146,7 @@ func serve() error {
 				case <-ctx.Done():
 					return
 				case <-t.C:
-					if n, err := st.PurgeExpiredSessions(ctx, cfg.IdleTimeout); err != nil {
+					if n, err := st.PurgeExpiredSessions(ctx, cfg.IdleTimeout, cfg.MFARemember); err != nil {
 						slog.Error("purge des sessions", "err", err)
 					} else if n > 0 {
 						slog.Info("sessions purgées", "n", n)

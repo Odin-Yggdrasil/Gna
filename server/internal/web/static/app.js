@@ -102,8 +102,8 @@ function showScreen(name) {
 
 function showAuthView(view) {
   showScreen("auth");
-  for (const v of ["login", "mfa", "enroll"]) $(`#view-${v}`).hidden = v !== view;
-  let first = $(`#view-${view} input`);
+  for (const v of ["login", "mfa", "lock", "enroll"]) $(`#view-${v}`).hidden = v !== view;
+  let first = $(`#view-${view} input:not([hidden])`);
   // Comme Saga : l'identifiant de la dernière connexion est prérempli.
   if (view === "login") {
     let last = "";
@@ -126,8 +126,14 @@ async function boot() {
     state.me = null;
     return showAuthView("login");
   }
+  if (me.stage !== "full") state.me = null;
   if (me.stage === "mfa") return showAuthView("mfa");
   if (me.stage === "enroll") return startEnroll();
+  if (me.stage === "locked") {
+    $("#lock-user").textContent = me.username;
+    $("#view-lock").elements.username.value = me.username;
+    return showAuthView("lock");
+  }
   state.me = me;
   applyTheme((me.prefs && me.prefs.theme) || "auto");
   $("#me-name").textContent = me.username;
@@ -137,29 +143,19 @@ async function boot() {
   go();
 }
 
-// ---------- session expirée ----------
+// ---------- session verrouillée ou expirée ----------
 
-// Vérifie la session toutes les 30 s (et au retour sur la fenêtre) sans la prolonger :
-// dès qu'elle a expiré, retour à l'écran de connexion. L'adresse (#/…) est gardée, la
-// page revient après la reconnexion.
-async function checkSession() {
-  if (!state.me) return;
-  try {
-    const res = await fetch("/api/auth/session", { credentials: "same-origin" });
-    if (res.status === 401) sessionExpired();
-  } catch { /* réseau indisponible : nouvel essai au prochain tour */ }
-}
-setInterval(checkSession, 30000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) checkSession(); });
-
-function sessionExpired() {
+// Appelé quand le serveur ne reconnaît plus la session complète (voir pingSession) :
+// sessions ouvertes fermées, puis écran de déverrouillage (mot de passe seul) ou de
+// connexion. L'adresse (#/…) est gardée : la même page revient ensuite.
+async function sessionExpired() {
   if (!state.me) return;
   state.me = null;
   if (window.GnaSessions) window.GnaSessions.closeAll();
   if (!$("#replay-view").hidden) closeReplay();
   for (const d of $$("dialog[open]")) d.close();
-  showAuthView("login");
-  setError("Votre session a expiré. Reconnectez-vous pour continuer.");
+  await boot();
+  if (!$("#view-login").hidden) setError("Votre session a expiré. Reconnectez-vous pour continuer.");
 }
 
 // ---------- pages (#/…) ----------
@@ -246,6 +242,30 @@ onSubmit($("#view-login"), async (f) => {
   } catch { /* facultatif */ }
 });
 onSubmit($("#view-mfa"), (f) => api("POST", "/api/auth/totp/verify", { code: f.get("code") }));
+onSubmit($("#view-lock"), (f) => api("POST", "/api/auth/unlock", { password: f.get("password") }));
+
+// ---------- inactivité ----------
+// Toutes les 30 s, l'interface demande au serveur l'état de la session en signalant s'il y a
+// eu une action réelle (clavier, souris, toucher) depuis la vérification précédente : seule
+// l'activité repousse le verrouillage (sauf « Rester connecté sur cet appareil »). Si la
+// session a été verrouillée ou fermée côté serveur, l'écran correspondant s'affiche aussitôt.
+const activity = { last: Date.now(), sent: 0 };
+for (const type of ["keydown", "pointerdown", "pointermove", "wheel", "touchstart"]) {
+  window.addEventListener(type, () => { activity.last = Date.now(); }, { capture: true, passive: true });
+}
+async function pingSession() {
+  if (!state.me) return;
+  const active = activity.last > activity.sent;
+  activity.sent = Date.now();
+  try {
+    const r = await api("POST", "/api/auth/ping", { active });
+    if (r.stage !== "full") sessionExpired();
+  } catch (e) {
+    if (e.status === 401) sessionExpired();
+  }
+}
+setInterval(pingSession, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pingSession(); });
 onSubmit($("#view-enroll"), (f) => api("POST", "/api/auth/totp/enroll/confirm", { code: f.get("code") }));
 
 // ---------- machines : favoris, dossiers, recherche ----------
@@ -830,7 +850,7 @@ async function loadSettings() {
     ` · ${me.is_admin ? "Administrateur" : "Utilisateur"}. `,
     me.remember
       ? `Session gardée sur cet appareil jusqu'au ${fmtDate(me.expires_at)}.`
-      : `Déconnexion après ${Math.round((me.idle_timeout_s || 1800) / 60)} min d'inactivité (cochez « Rester connecté sur cet appareil » à la connexion pour l'éviter).`);
+      : `Verrouillage après ${Math.round((me.idle_timeout_s || 1800) / 60)} min d'inactivité (cochez « Rester connecté sur cet appareil » à la connexion pour l'éviter).`);
   $("#self-password-form").elements.username.value = me.username;
   renderThemePick();
   const jobs = [loadCmdsCount(), loadTokens()];
