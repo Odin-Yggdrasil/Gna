@@ -46,7 +46,9 @@
         ],
         "installMode": "currentUser"
       }
-    }
+    },
+    "copyright": "© 2026 Odin — AGPL-3.0-or-later",
+    "license": "AGPL-3.0-or-later"
   },
   "plugins": {
     "deep-link": {

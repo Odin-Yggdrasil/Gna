@@ -2,6 +2,7 @@
 name = "gna-rdp"
 version = "0.1.0"
 edition = "2021"
+license = "AGPL-3.0-or-later"
 rust-version = "1.89"
 description = "Passerelle RDP → VNC de Gná (IronRDP) : les identifiants restent sur le serveur"
 

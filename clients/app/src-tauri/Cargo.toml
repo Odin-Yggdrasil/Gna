@@ -3,6 +3,7 @@ name = "gna-app"
 version = "0.15.4"
 description = "Application Gná : bastion d'accès SSH, VNC et RDP"
 edition = "2021"
+license = "AGPL-3.0-or-later"
 rust-version = "1.90"
 
 [lib]

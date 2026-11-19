@@ -15,7 +15,7 @@
   <img alt="Go" src="https://img.shields.io/badge/Go-serveur-00ADD8?logo=go&logoColor=white">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-passerelle%20RDP%20%2B%20app-000000?logo=rust">
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white">
-  <img alt="Licence" src="https://img.shields.io/badge/licence-propri%C3%A9taire%2C%20gratuite-lightgrey">
+  <img alt="Licence" src="https://img.shields.io/badge/licence-AGPL--3.0-5FB3A1">
 </p>
 
 > Dans la mythologie nordique, Gná est la messagère de Frigg : elle voyage d'un monde à l'autre sur Hófvarpnir.
@@ -478,4 +478,12 @@ Le flux VNC entre Gná et la cible n'est pas chiffré par le protocole : limiter
 
 ## Licence
 
-Logiciel propriétaire, **gratuit** : chacun peut le télécharger, l'installer et l'utiliser, à titre personnel ou professionnel. Le modifier, le redistribuer ou le vendre reste interdit sans l'accord de l'auteur (voir `LICENSE`). Les composants tiers inclus gardent leur propre licence (voir `THIRD-PARTY.md`).
+Gná est un **logiciel libre**, © 2026 Odin, publié sous licence **GNU Affero General Public License v3.0 ou ultérieure** (AGPL-3.0-or-later, voir [`LICENSE`](LICENSE)).
+
+- Chacun peut l'utiliser, l'étudier, le modifier et le redistribuer, à titre personnel ou professionnel.
+- Une version modifiée doit rester sous AGPL-3.0, avec ses sources. Proposée comme service accessible par le réseau (un bastion hébergé pour d'autres, par exemple), elle doit aussi offrir ses sources à ses utilisateurs.
+- Gná est fourni **sans aucune garantie** (articles 15 et 16 de la licence).
+
+Les composants tiers inclus gardent leur propre licence (voir [`THIRD-PARTY.md`](THIRD-PARTY.md)).
+
+Les contributions (tickets, corrections, propositions) sont les bienvenues.

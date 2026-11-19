@@ -22,6 +22,8 @@ sed -e 's|/usr/local/bin/gna|/usr/bin/gna|' -e 's|/usr/local/share/doc/gna|/usr/
   "$HERE/gna.service" > "$ROOT/usr/lib/systemd/system/gna.service"
 chmod 0644 "$ROOT/usr/lib/systemd/system/gna.service"
 install -D -m 0644 "$SRC/README.md"              "$ROOT/usr/share/doc/gna/README.md"
+install -D -m 0644 "$SRC/LICENSE"                "$ROOT/usr/share/doc/gna/copyright"   # AGPL-3.0
+install -D -m 0644 "$SRC/THIRD-PARTY.md"         "$ROOT/usr/share/doc/gna/THIRD-PARTY.md"
 install -D -m 0644 "$HERE/gna.env.example" "$ROOT/usr/share/gna/gna.env.example"
 install -D -m 0644 "$SRC/assets/logo/bindrune/gna-512.png" "$ROOT/usr/share/icons/hicolor/512x512/apps/gna.png"
 install -D -m 0644 "$SRC/assets/logo/bindrune/favicon.svg" "$ROOT/usr/share/icons/hicolor/scalable/apps/gna.svg"
