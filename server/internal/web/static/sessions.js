@@ -269,6 +269,10 @@ class SshSession extends Session {
     if (this.sftp.tid) params.set("t", this.sftp.tid);
     const ws = new WebSocket(`${proto}://${location.host}/api/targets/${this.target.id}/ssh?${params}`);
     ws.binaryType = "arraybuffer";
+    // Taille réelle à l'ouverture : un redimensionnement survenu pendant la connexion
+    // (passage en mosaïque, espace de travail) aurait été perdu, et htop ou vim
+    // s'afficheraient de travers.
+    ws.addEventListener("open", () => ws.send(JSON.stringify({ type: "resize", cols: x.cols, rows: x.rows })));
     this.ws = ws;
     const enc = new TextEncoder();
 
